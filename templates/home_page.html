@@ -1,11 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<h1>Hello World</h1>
-<p>Welcome to the home page!</p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+    <h2>We need your information!</h2>
+    <form method="POST" action="/user_info/">
+        {% csrf_token %}
+
+        <label>Name: <input type="text" name="name" required></label><br>
+
+        <label>Birthday: <input type="date" name="birthday" id="birthday" required></label><br>
+
+        <label>Nationality:
+            <select name="nationality" required>
+                <option value="vietnam">Vietnam</option>
+                <option value="america">America</option>
+                <option value="korea">Korea</option>
+                <option value="other">Other</option>
+            </select>
+        </label><br>
+
+        <label>Current Residence in Japan:
+            <select name="current_residence" required>
+                <option value="">--Select city--</option>
+                <option value="tokyo">Tokyo</option>
+                <option value="osaka">Osaka</option>
+                <option value="kyoto">Kyoto</option>
+                <option value="sapporo">Sapporo</option>
+                <option value="fukuoka">Fukuoka</option>
+                <option value="other">Other</option>
+            </select>
+        </label><br>
+
+        <p>What would you like to do next?</p>
+        <label>
+            <input type="radio" name="next_action" value="match" required>
+            I want to find a more suitable place to live
+        </label><br>
+        <label>
+            <input type="radio" name="next_action" value="evaluate" required>
+            I want to contribute by evaluating my current city
+        </label><br>
+
+        <button type="submit">Next</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('birthday').setAttribute('max', today);
+        });
+    </script>
+{% endblock %}

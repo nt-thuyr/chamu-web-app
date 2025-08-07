@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}MY WEBSITE{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>Finding your ideal city</h1>
+        <nav>
+            <a href="/">Homepage</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- Child website's content -->
+        {% endblock %}
+    </main>
+</body>
+</html>
