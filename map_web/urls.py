@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from chamu.views import (
-    home_page,
+    homepage,
     user_info,
     matching_survey,
     evaluation_survey,
@@ -25,9 +25,9 @@ from chamu.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_page, name='home_page'),
+    path('', homepage, name='homepage'),
     path('user_info/', user_info, name='user_info'),
     path('matching_survey/', matching_survey, name='matching_survey'),
-    path('evaluation_survey/', evaluation_survey, name='evaluation_survey'),
+    path('evaluation_survey/<int:user_info_id>/', evaluation_survey, name='evaluation_survey'),
 ]
 
