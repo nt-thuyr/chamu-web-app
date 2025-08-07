@@ -1,7 +1,13 @@
-{% extends 'survey.html' %}
+{% extends 'homepage.html' %}
 
 {% block title %}Evaluation Survey{% endblock %}
 
-{% block question %}
-    <p>Details of an evaluation survey</p>
+{% block content %}
+    <h2>Evaluation Survey</h2>
+    <p>How is your current living place?</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
 {% endblock %}
