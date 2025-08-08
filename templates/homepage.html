@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+    <h2>We need your information!</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Next</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            const birthdayInput = document.querySelector('input[name="birthday"]');
+            if (birthdayInput) {
+                birthdayInput.setAttribute('max', today);
+            }
+        });
+    </script>
+{% endblock %}

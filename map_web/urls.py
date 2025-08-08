@@ -16,9 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from chamu.views import home_page
+from chamu.views import (
+    homepage,
+    matching_survey,
+    evaluation_survey,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_page, name='home_page'),
+    path('', homepage, name='homepage'),
+    path('matching_survey/', matching_survey, name='matching_survey'),
+    path('evaluation_survey/<int:user_info_id>/', evaluation_survey, name='evaluation_survey'),
 ]
+
