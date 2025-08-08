@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.urls import path
 from chamu.views import (
     homepage,
-    user_info,
     matching_survey,
     evaluation_survey,
 )
@@ -26,7 +25,6 @@ from chamu.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', homepage, name='homepage'),
-    path('user_info/', user_info, name='user_info'),
     path('matching_survey/', matching_survey, name='matching_survey'),
     path('evaluation_survey/<int:user_info_id>/', evaluation_survey, name='evaluation_survey'),
 ]
