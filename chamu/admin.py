@@ -1,28 +1,35 @@
 from django.contrib import admin
 from .models import (
-    City,
-    Nationality,
-    LocalShop,
-    UserInfo,
-    EvaluationSurvey,
-    CityScore
+    City, Province, Nationality, UserInfo, Criteria,
+    EvaluationSurvey, ProvinceBaseScore, ProvinceMatchingScore
 )
 
-# Để hiển thị các trường liên kết, bạn cần dùng TabularInline
-class LocalShopInline(admin.TabularInline):
-    model = LocalShop
-    extra = 1  # Số lượng form trống để thêm mới
-
-class CityScoreInline(admin.TabularInline):
-    model = CityScore
+# Inlines để quản lý dữ liệu liên quan ngay trong trang cha
+class ProvinceBaseScoreInline(admin.TabularInline):
+    model = ProvinceBaseScore
     extra = 1
 
-# Các lớp Admin chính để tùy chỉnh giao diện
+class ProvinceMatchingScoreInline(admin.TabularInline):
+    model = ProvinceMatchingScore
+    extra = 1
+
+class ProvinceInline(admin.TabularInline):
+    model = Province
+    extra = 1
+
+# Đăng ký các model chính với các tùy chỉnh hiển thị
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'base_cost_of_living', 'base_local_shops', 'base_temperature')
+    list_display = ('name',)
     search_fields = ('name',)
-    inlines = [LocalShopInline, CityScoreInline] # Hiển thị LocalShop và CityScore trong trang City
+    inlines = [ProvinceInline]
+
+@admin.register(Province)
+class ProvinceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'city',)
+    list_filter = ('city',)
+    search_fields = ('name',)
+    inlines = [ProvinceBaseScoreInline]
 
 @admin.register(Nationality)
 class NationalityAdmin(admin.ModelAdmin):
@@ -31,22 +38,28 @@ class NationalityAdmin(admin.ModelAdmin):
 
 @admin.register(UserInfo)
 class UserInfoAdmin(admin.ModelAdmin):
-    list_display = ('name', 'nationality', 'city')
-    list_filter = ('nationality', 'city')
+    list_display = ('name', 'nationality', 'province',)
+    list_filter = ('nationality', 'province',)
     search_fields = ('name',)
+
+@admin.register(Criteria)
+class CriteriaAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug',)
+    search_fields = ('name', 'slug',)
 
 @admin.register(EvaluationSurvey)
 class EvaluationSurveyAdmin(admin.ModelAdmin):
-    list_display = ('user', 'city', 'cost_of_living_score', 'created_at')
-    list_filter = ('city', 'user__nationality') # Lọc khảo sát theo thành phố và quốc tịch của người dùng
+    list_display = ('user', 'province', 'criteria', 'score',)
+    list_filter = ('province', 'criteria', 'user__nationality',)
     search_fields = ('user__name',)
 
-@admin.register(LocalShop)
-class LocalShopAdmin(admin.ModelAdmin):
-    list_display = ('city', 'nationality', 'shop_number')
-    list_filter = ('city', 'nationality')
+@admin.register(ProvinceMatchingScore)
+class ProvinceMatchingScoreAdmin(admin.ModelAdmin):
+    list_display = ('province', 'nationality', 'criteria', 'avg_score', 'final_score',)
+    list_filter = ('province', 'nationality', 'criteria',)
+    search_fields = ('province__name', 'nationality__name',)
 
-@admin.register(CityScore)
-class CityScoreAdmin(admin.ModelAdmin):
-    list_display = ('city', 'nationality', 'avg_cost_of_living', 'final_cost_of_living')
-    list_filter = ('city', 'nationality')
+@admin.register(ProvinceBaseScore)
+class ProvinceBaseScoreAdmin(admin.ModelAdmin):
+    list_display = ('province', 'criteria', 'base_score',)
+    list_filter = ('province', 'criteria',)
