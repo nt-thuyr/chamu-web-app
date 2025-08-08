@@ -2,18 +2,25 @@ import pandas as pd
 import requests
 import urllib.parse
 import os
+import time
+from dotenv import load_dotenv
+
+# .envファイルからAPIキーを読み込む
+load_dotenv()
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+
+# APIキーが存在しない場合はエラー
+if not API_KEY:
+    raise ValueError("APIキーが読み込めませんでした。`.env` を確認してください。")
 
 # 入力CSVファイル（市区町村一覧）
 input_path = "location.csv"
 
 # 出力CSVファイル
-output_path = "海外ショップ検索リンク.csv"
+output_path = "shop_rate.csv"
 
-# Google Maps APIキー（自分のものに置き換えてください）
-API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"  # ←★ここに自分のAPIキーを入力
-
-# 検索キーワード
-query_keyword = "海外ショップ"
+# 検索キーワード（変更可）
+query_keyword = "海外料理　本場の味　レストラン　外国人店主"  #
 
 # CSV読み込み（Shift-JIS対応）
 df = pd.read_csv(input_path, encoding="shift_jis")
@@ -28,27 +35,47 @@ for index, row in df.iterrows():
     query = f"{location} {query_keyword}"
     url_encoded_query = urllib.parse.quote(query)
 
+    # Google Maps 検索URL
     search_url = f"https://www.google.com/maps/search/?api=1&query={url_encoded_query}"
     df.at[index, "検索URL"] = search_url
 
-    # Google Maps Places API で検索件数を取得
+    # Google Places API リクエスト
     api_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     params = {
         "query": query,
         "key": API_KEY,
         "language": "ja"
     }
-    response = requests.get(api_url, params=params)
-    data = response.json()
 
-    # 結果数取得（最大 20 件／ページ）
-    if data.get("results"):
-        df.at[index, "検索件数"] = len(data["results"])
-    else:
-        df.at[index, "検索件数"] = 0
+    try:
+        response = requests.get(api_url, params=params, timeout=10)
+        data = response.json()
 
-# CSV書き出し（出力ファイルを開いてるとエラーになるので注意）
+        # デバッグ用出力（後で削除してOK）
+        print(f"クエリ: {query}")
+        print(f"ステータス: {data.get('status')}")
+        print(f"件数: {len(data.get('results', []))}")
+        print("-" * 40)
+
+        # 検索結果件数を記録
+        if data.get("results"):
+            df.at[index, "検索件数"] = len(data["results"])
+        else:
+            df.at[index, "検索件数"] = 0
+
+    except requests.exceptions.Timeout:
+        print(f"タイムアウト: {query}")
+        df.at[index, "検索件数"] = "timeout"
+
+    except requests.exceptions.RequestException as e:
+        print(f"通信エラー: {query} - {e}")
+        df.at[index, "検索件数"] = "error"
+
+    time.sleep(0.5)  # APIへの負荷軽減
+
+# 出力ファイルが既に存在していれば削除
 if os.path.exists(output_path):
     os.remove(output_path)
 
+# 結果をCSVで出力（UTF-8）
 df.to_csv(output_path, index=False, encoding="utf-8-sig")
