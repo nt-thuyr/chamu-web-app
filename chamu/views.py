@@ -4,10 +4,10 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .forms import (
-    UserInfoForm, EvaluationSurveyBaseForm, MatchingSurveyBaseForm
+    UserInfoForm
 )
 from .models import (
-    Criteria, UserInfo, City, Province, Nationality,
+    Criteria, UserInfo, Province,
     ProvinceBaseScore, ProvinceMatchingScore, EvaluationSurvey
 )
 
@@ -44,18 +44,18 @@ def evaluation_survey_view(request, user_info_id):
         score = forms.IntegerField(
             min_value=1,
             max_value=5,
-            label='Điểm số',
+            label='Score',
             widget=forms.Select(choices=[(i, f'{i} sao') for i in range(1, 6)])
         )
 
-    EvaluationSurveyFormSet = formset_factory(
+    evaluation_survey_form_set = formset_factory(
         EvaluationForm,
         extra=len(criteria_list),
         can_delete=False
     )
 
     if request.method == 'POST':
-        formset = EvaluationSurveyFormSet(request.POST)
+        formset = evaluation_survey_form_set(request.POST)
 
         if formset.is_valid():
             # Use bulk_create for better performance
@@ -77,11 +77,15 @@ def evaluation_survey_view(request, user_info_id):
 
             return redirect('homepage')
     else:
-        formset = EvaluationSurveyFormSet()
+        formset = evaluation_survey_form_set()
+
+    # Zip formset with criteria for rendering
+    form_criteria = zip(formset.forms, criteria_list)
 
     return render(request, 'evaluation_survey.html', {
         'formset': formset,
         'criteria_list': criteria_list,
+        'form_criteria': form_criteria,
         'user_info': user_info
     })
 
@@ -98,22 +102,24 @@ def matching_survey_view(request, user_info_id):
         priority = forms.IntegerField(
             min_value=1,
             max_value=len(criteria_list),
-            label='Thứ tự ưu tiên',
-            widget=forms.Select(choices=[(i, f'Thứ {i}') for i in range(1, len(criteria_list) + 1)]),
-            help_text='1 = Quan trọng nhất'
+            label='Priority',
+            widget=forms.Select(choices=[(i, f'Number {i}') for i in range(1, len(criteria_list) + 1)]),
+            help_text='1 = Highest priority'
         )
 
-    MatchingSurveyFormSet = formset_factory(
+    matching_survey_form_set = formset_factory(
         MatchingForm,
         extra=len(criteria_list),
         can_delete=False
     )
 
     if request.method == 'POST':
-        formset = MatchingSurveyFormSet(request.POST)
+        formset = matching_survey_form_set(request.POST)
 
         if formset.is_valid():
             # Validate that all priorities are unique
+            form_criteria = zip(formset.forms, criteria_list)
+
             priorities = []
             for form in formset:
                 priority = form.cleaned_data.get('priority')
@@ -124,8 +130,9 @@ def matching_survey_view(request, user_info_id):
                 return render(request, 'matching_survey.html', {
                     'formset': formset,
                     'criteria_list': criteria_list,
+                    'form_criteria': form_criteria,
                     'user_info': user_info,
-                    'error': 'Mỗi thứ tự ưu tiên chỉ được chọn một lần!'
+                    'error': 'All priorities must be unique.'
                 })
 
             # Store user preferences in session (no database save)
@@ -145,11 +152,14 @@ def matching_survey_view(request, user_info_id):
             # Calculate matching scores and redirect to results
             return redirect('matching_results', user_info_id=user_info.id)
     else:
-        formset = MatchingSurveyFormSet()
+        formset = matching_survey_form_set()
+
+    form_criteria = zip(formset.forms, criteria_list)
 
     return render(request, 'matching_survey.html', {
         'formset': formset,
         'criteria_list': criteria_list,
+        'form_criteria': form_criteria,
         'user_info': user_info
     })
 
@@ -282,59 +292,59 @@ def calculate_province_matching_scores(user_preferences):
     return matching_results
 
 
-def get_province_matching_details(request, user_info_id, province_id):
-    """API endpoint to get detailed matching information for a specific province"""
-    province = get_object_or_404(Province, id=province_id)
-
-    # Get user preferences from session
-    preferences_key = f'preferences_{user_info_id}'
-    user_preferences = request.session.get(preferences_key)
-
-    if not user_preferences:
-        return JsonResponse({'error': 'No preferences found'}, status=400)
-
-    details = []
-    max_priority = len(user_preferences)
-
-    for criteria_id, preference_data in user_preferences.items():
-        weight = max_priority - preference_data['priority'] + 1
-
-        # Get criteria object
-        try:
-            criteria = Criteria.objects.get(id=criteria_id)
-        except Criteria.DoesNotExist:
-            continue
-
-        # Get province score
-        try:
-            province_score_obj = ProvinceMatchingScore.objects.get(
-                province=province,
-                criteria=criteria
-            )
-            province_score = province_score_obj.avg_score
-            score_source = "Đánh giá của người dùng"
-        except ProvinceMatchingScore.DoesNotExist:
-            try:
-                base_score_obj = ProvinceBaseScore.objects.get(
-                    province=province,
-                    criteria=criteria
-                )
-                province_score = base_score_obj.base_score
-                score_source = "Dữ liệu cơ sở"
-            except ProvinceBaseScore.DoesNotExist:
-                province_score = 1.0
-                score_source = "Điểm mặc định"
-
-        details.append({
-            'criteria_name': preference_data['criteria_name'],
-            'priority': preference_data['priority'],
-            'weight': weight,
-            'province_score': province_score,
-            'weighted_score': province_score * weight,
-            'score_source': score_source
-        })
-
-    return JsonResponse({
-        'province_name': province.name,
-        'details': details
-    })
+# def get_province_matching_details(request, user_info_id, province_id):
+#     """API endpoint to get detailed matching information for a specific province"""
+#     province = get_object_or_404(Province, id=province_id)
+#
+#     # Get user preferences from session
+#     preferences_key = f'preferences_{user_info_id}'
+#     user_preferences = request.session.get(preferences_key)
+#
+#     if not user_preferences:
+#         return JsonResponse({'error': 'No preferences found'}, status=400)
+#
+#     details = []
+#     max_priority = len(user_preferences)
+#
+#     for criteria_id, preference_data in user_preferences.items():
+#         weight = max_priority - preference_data['priority'] + 1
+#
+#         # Get criteria object
+#         try:
+#             criteria = Criteria.objects.get(id=criteria_id)
+#         except Criteria.DoesNotExist:
+#             continue
+#
+#         # Get province score
+#         try:
+#             province_score_obj = ProvinceMatchingScore.objects.get(
+#                 province=province,
+#                 criteria=criteria
+#             )
+#             province_score = province_score_obj.avg_score
+#             score_source = "Đánh giá của người dùng"
+#         except ProvinceMatchingScore.DoesNotExist:
+#             try:
+#                 base_score_obj = ProvinceBaseScore.objects.get(
+#                     province=province,
+#                     criteria=criteria
+#                 )
+#                 province_score = base_score_obj.base_score
+#                 score_source = "Dữ liệu cơ sở"
+#             except ProvinceBaseScore.DoesNotExist:
+#                 province_score = 1.0
+#                 score_source = "Điểm mặc định"
+#
+#         details.append({
+#             'criteria_name': preference_data['criteria_name'],
+#             'priority': preference_data['priority'],
+#             'weight': weight,
+#             'province_score': province_score,
+#             'weighted_score': province_score * weight,
+#             'score_source': score_source
+#         })
+#
+#     return JsonResponse({
+#         'province_name': province.name,
+#         'details': details
+#     })

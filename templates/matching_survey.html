@@ -1,7 +1,39 @@
-{% extends 'survey.html' %}
+{% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Matching Survey{% endblock %}
+{% block title %}{% trans "Matching Survey" %}{% endblock %}
 
-{% block question %}
-    <p>Details of a matching survey</p>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h2 class="mb-4 text-center">{% trans "Matching Criteria Survey" %}</h2>
+        <p class="mb-3 text-center">{% trans "Please rank the criteria according to your priority (1 = Highest)." %}</p>
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ formset.management_form }}
+            <ul class="list-group mb-3">
+                {% for form, criteria in form_criteria %}
+                    <li class="list-group-item">
+                        <strong>{{ criteria.name }}</strong>
+                        <div class="mt-2">
+                            {{ form.priority }}
+                            {% for error in form.priority.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                            {% if form.priority.help_text %}
+                                <div class="form-text">{{ form.priority.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">{% trans "Submit Matching Survey" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
