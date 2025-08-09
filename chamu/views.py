@@ -3,6 +3,8 @@ from django.db.models import Avg
 from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+
 from .forms import (
     UserInfoForm
 )
@@ -15,22 +17,56 @@ from .models import (
 # Views
 # -----------------
 def homepage(request):
-    if request.method == 'POST':
-        form = UserInfoForm(request.POST)
-        if form.is_valid():
-            next_action = form.cleaned_data['next_action']
-            user_info = form.save()  # Save the user info to the database
+    nationality_choices = UserInfoForm.base_fields['nationality'].choices
+    province_choices = Province.objects.all()
+    userinfo = None
+    if request.user.is_authenticated:
+        try:
+            userinfo = UserInfo.objects.get(user=request.user)
+        except UserInfo.DoesNotExist:
+            userinfo = None
 
+    if request.method == 'POST':
+        next_action = request.POST.get('next_action')
+        name = request.POST.get('name')
+        nationality = request.POST.get('nationality')
+        province = request.POST.get('province')
+        # Lưu hoặc update userinfo
+        if request.user.is_authenticated:
+            userinfo, created = UserInfo.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    'name': name,
+                    'nationality': nationality,
+                    'province_id': province
+                }
+            )
+        else:
+            userinfo = UserInfo.objects.create(
+                name=name,
+                nationality=nationality,
+                province_id=province
+            )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             if next_action == 'match':
-                return redirect('matching_survey', user_info_id=user_info.id)
+                return JsonResponse({'success': True, 'redirect_url': reverse('matching_survey', args=[userinfo.id])})
             elif next_action == 'evaluate':
-                return redirect('evaluation_survey', user_info_id=user_info.id)
+                return JsonResponse({'success': True, 'redirect_url': reverse('evaluation_survey', args=[userinfo.id])})
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid choice'})
+        else:
+            if next_action == 'match':
+                return redirect('matching_survey', user_info_id=userinfo.id)
+            elif next_action == 'evaluate':
+                return redirect('evaluation_survey', user_info_id=userinfo.id)
             else:
                 return HttpResponse("Invalid choice.")
-    else:
-        form = UserInfoForm()
-    return render(request, 'homepage.html', {'form': form})
-
+    context = {
+        'nationality_choices': nationality_choices,
+        'province_choices': province_choices,
+        'userinfo': userinfo
+    }
+    return render(request, 'homepage.html', context)
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
@@ -45,7 +81,7 @@ def evaluation_survey_view(request, user_info_id):
             min_value=1,
             max_value=5,
             label='Score',
-            widget=forms.Select(choices=[(i, f'{i} sao') for i in range(1, 6)])
+            widget=forms.Select(choices=[(i, f'{i} star(s)') for i in range(1, 6)])
         )
 
     evaluation_survey_form_set = formset_factory(

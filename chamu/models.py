@@ -1,5 +1,7 @@
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
+
+User = settings.AUTH_USER_MODEL
 
 class Criteria(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="e.g. cost of living, local shops, ...")
