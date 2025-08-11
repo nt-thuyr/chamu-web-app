@@ -102,7 +102,7 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
+                <button type="submit" class="btn btn-success">{% trans "Submit" %}</button>
               </div>
             </form>
           </div>
@@ -116,7 +116,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
           </div>
           <div class="modal-body">
-            <div id="signup-error" class="text-danger mb-2" style="display:none"></div>
+            <div id="signup-error-list" class="alert alert-danger py-2" style="display:none"></div>
             <div class="mb-3">
               <label for="signup-username" class="form-label">{% trans "Username" %}</label>
               <input type="text" class="form-control" id="signup-username" name="username" required>
@@ -124,6 +124,7 @@
             <div class="mb-3">
               <label for="signup-password" class="form-label">{% trans "Password" %}</label>
               <input type="password" class="form-control" id="signup-password" name="password" required>
+              <div class="form-text text-muted">{% trans "Your password must have at least 6 characters" %}</div>
             </div>
             <div class="mb-3">
               <label for="signup-password2" class="form-label">{% trans "Retype Password" %}</label>
@@ -169,7 +170,7 @@ $(function() {
 
     // Hiện modal signup khi nhấn nút Sign up
     $('#signup-btn').on('click', function() {
-        $('#signup-error').hide();
+        $('#signup-error-list').hide().empty();
         $('#signup-form')[0].reset();
     });
 
@@ -210,7 +211,16 @@ $(function() {
                     $('#signupModal').modal('hide');
                     location.reload();
                 } else {
-                    $('#signup-error').text(data.error).show();
+                    if (data.errors) {
+                        let html = '<ul class="mb-0">';
+                        data.errors.forEach(function(err) {
+                            html += '<li>' + err + '</li>';
+                        });
+                        html += '</ul>';
+                        $('#signup-error-list').html(html).show();
+                    } else if (data.error) {
+                        $('#signup-error-list').html('<ul class="mb-0"><li>' + data.error + '</li></ul>').show();
+                    }
                 }
             }
         });

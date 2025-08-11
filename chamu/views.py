@@ -61,17 +61,19 @@ def ajax_signup(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         password2 = request.POST.get("password2")
+        errors = []
         # Kiểm tra username trùng
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
+            errors.append("Username already exists.")
         # Kiểm tra mật khẩu nhập lại
         if password != password2:
-            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
-        # Kiểm tra độ dài mật khẩu
+            errors.append("Passwords do not match.")
         if len(password) < 6:
-            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
+            errors.append("Your password must have at least 6 characters.")
         # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
 
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
         user = User.objects.create_user(username=username, password=password)
         user.save()
         # Đăng nhập luôn
