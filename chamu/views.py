@@ -58,102 +58,28 @@ def ajax_logout(request):
 
 def ajax_signup(request):
     if request.method == "POST":
-        try:
-            # Lấy dữ liệu từ request
-            if request.content_type.startswith('application/json'):
-                data = json.loads(request.body)
-            else:
-                data = request.POST
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        password2 = request.POST.get("password2")
+        # Kiểm tra username trùng
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
+        # Kiểm tra mật khẩu nhập lại
+        if password != password2:
+            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
+        # Kiểm tra độ dài mật khẩu
+        if len(password) < 6:
+            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
+        # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
 
-            username = data.get("username", "").strip()
-            password = data.get("password", "").strip()
-            confirm_password = data.get("confirm_password", "").strip()
-            country_id = data.get("country")
-            municipality_id = data.get("municipality")
-            next_action = data.get('next_action', '')
-
-            # Validation
-            errors = []
-
-            if not username:
-                errors.append("Tên đăng nhập không được để trống")
-            elif User.objects.filter(username=username).exists():
-                errors.append("Tên đăng nhập đã tồn tại")
-
-            if not password:
-                errors.append("Mật khẩu không được để trống")
-            elif len(password) < 6:
-                errors.append("Mật khẩu phải có ít nhất 6 ký tự")
-
-            if password != confirm_password:
-                errors.append("Xác nhận mật khẩu không khớp")
-
-            if not country_id:
-                errors.append("Vui lòng chọn quốc tịch")
-
-            if not municipality_id:
-                errors.append("Vui lòng chọn tỉnh/thành phố")
-
-            if not next_action:
-                errors.append("Vui lòng chọn hành động tiếp theo")
-
-            if errors:
-                return JsonResponse({
-                    'success': False,
-                    'errors': errors
-                })
-
-            # Tạo user mới
-            user = User.objects.create_user(
-                username=username,
-                password=password
-            )
-
-            # Tạo UserInfo
-            try:
-                country = Country.objects.get(id=country_id)
-                municipality = Municipality.objects.get(id=municipality_id)
-
-                userinfo = UserInfo.objects.create(
-                    user=user,
-                    name=username,
-                    country=country,
-                    municipality=municipality
-                )
-
-                # Đăng nhập user mới tạo
-                login(request, user)
-
-                # Xác định URL chuyển hướng
-                if next_action == 'match':
-                    redirect_url = reverse('matching_survey', args=[userinfo.id])
-                elif next_action == 'evaluate':
-                    redirect_url = reverse('evaluation_survey', args=[userinfo.id])
-                else:
-                    redirect_url = reverse('homepage')
-
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Đăng ký thành công! Chào mừng {user.username}',
-                    'redirect_url': redirect_url,
-                    'username': user.username
-                })
-
-            except (Country.DoesNotExist, Municipality.DoesNotExist):
-                # Xóa user nếu tạo UserInfo thất bại
-                user.delete()
-                return JsonResponse({
-                    'success': False,
-                    'errors': ['Thông tin quốc tịch hoặc tỉnh/thành không hợp lệ']
-                })
-
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'errors': [f'Có lỗi xảy ra: {str(e)}']
-            })
-    else:
-        return JsonResponse({'success': False, 'errors': ['Method not allowed']})
+        user = User.objects.create_user(username=username, password=password)
+        user.save()
+        # Đăng nhập luôn
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
 
 @login_required
 def ajax_update(request):

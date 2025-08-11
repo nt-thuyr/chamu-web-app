@@ -25,11 +25,18 @@
                             <button id="logout-btn" class="btn btn-danger">{% trans "Logout" %}</button>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <button id="login-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
-                                {% trans "Login" %}
-                            </button>
-                        </li>
+                        {% if request.resolver_match.url_name == "homepage" %}
+                            <li class="nav-item me-2">
+                                <button id="login-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                    {% trans "Log in" %}
+                                </button>
+                            </li>
+                             <li class="nav-item">
+                                <button id="signup-btn" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#signupModal">
+                                    {% trans "Sign up" %}
+                                </button>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     <!-- Example future language switcher -->
                     <li class="nav-item dropdown">
@@ -80,7 +87,7 @@
           <div class="modal-dialog">
             <form id="login-form" class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h5>
+                <h5 class="modal-title" id="loginModalLabel">{% trans "Log in" %}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
               </div>
               <div class="modal-body">
@@ -95,14 +102,43 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">{% trans "Login" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
               </div>
             </form>
           </div>
         </div>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script>
-    function getCookie(name) {
+    <!-- Modal Sign up -->
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form id="signup-form" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="signupModalLabel">{% trans "Sign up" %}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+          </div>
+          <div class="modal-body">
+            <div id="signup-error" class="text-danger mb-2" style="display:none"></div>
+            <div class="mb-3">
+              <label for="signup-username" class="form-label">{% trans "Username" %}</label>
+              <input type="text" class="form-control" id="signup-username" name="username" required>
+            </div>
+            <div class="mb-3">
+              <label for="signup-password" class="form-label">{% trans "Password" %}</label>
+              <input type="password" class="form-control" id="signup-password" name="password" required>
+            </div>
+            <div class="mb-3">
+              <label for="signup-password2" class="form-label">{% trans "Retype Password" %}</label>
+              <input type="password" class="form-control" id="signup-password2" name="password2" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">{% trans "Register" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -114,7 +150,7 @@
             }
         }
     }
-    return cookieValue;
+return cookieValue;
 }
 const csrftoken = getCookie('csrftoken');
 $.ajaxSetup({
@@ -129,6 +165,12 @@ $(function() {
     $('#login-btn').on('click', function() {
         $('#login-error').hide();
         $('#login-form')[0].reset();
+    });
+
+    // Hiện modal signup khi nhấn nút Sign up
+    $('#signup-btn').on('click', function() {
+        $('#signup-error').hide();
+        $('#signup-form')[0].reset();
     });
 
     // Submit login AJAX
@@ -147,6 +189,28 @@ $(function() {
                     location.reload();
                 } else {
                     $('#login-error').text(data.error).show();
+                }
+            }
+        });
+    });
+
+    // Submit signup AJAX
+    $('#signup-form').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '{% url "ajax_signup" %}',
+            method: 'POST',
+            data: {
+                 username: $('#signup-username').val(),
+                 password: $('#signup-password').val(),
+                 password2: $('#signup-password2').val()
+            },
+            success: function(data) {
+                if (data.success) {
+                    $('#signupModal').modal('hide');
+                    location.reload();
+                } else {
+                    $('#signup-error').text(data.error).show();
                 }
             }
         });
