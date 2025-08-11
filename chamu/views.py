@@ -258,6 +258,35 @@ def update_province_avg_score(province):
             criteria=criteria,
             defaults={'avg_score': avg_score}
         )
+    # Update final scores after recalculating averages
+    update_province_final_score(province)
+
+def update_province_final_score(province):
+    criteria_list = Criteria.objects.all()
+    for criteria in criteria_list:
+        try:
+            base_score_obj = ProvinceBaseScore.objects.get(province=province, criteria=criteria)
+            base_score = base_score_obj.base_score
+        except ProvinceBaseScore.DoesNotExist:
+            base_score = 1.0
+
+        try:
+            avg_score_obj = ProvinceMatchingScore.objects.get(province=province, criteria=criteria)
+            avg_score = avg_score_obj.avg_score
+        except ProvinceMatchingScore.DoesNotExist:
+            avg_score = None
+
+        if avg_score is not None:
+            final_score = base_score * 0.6 + avg_score * 0.4
+        else:
+            final_score = base_score
+
+        ProvinceMatchingScore.objects.update_or_create(
+            province=province,
+            criteria=criteria,
+            defaults={'final_score': final_score}
+        )
+
 
 
 def calculate_province_matching_scores(user_preferences):
@@ -277,8 +306,8 @@ def calculate_province_matching_scores(user_preferences):
 
         for criteria_id, preference_data in user_preferences.items():
             # Convert priority to weight (lower priority number = higher weight)
-            max_priority = len(user_preferences)
-            weight = max_priority - preference_data['priority'] + 1
+            max_priority = len(user_preferences) + 1
+            weight = max_priority - preference_data['priority']
 
             # Get criteria object
             try:
@@ -293,7 +322,7 @@ def calculate_province_matching_scores(user_preferences):
                     province=province,
                     criteria=criteria
                 )
-                province_score = province_score_obj.avg_score
+                province_score = province_score_obj.final_score
             except ProvinceMatchingScore.DoesNotExist:
                 # Fallback to base score if no user evaluations
                 try:
