@@ -4,12 +4,17 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 from .forms import (
     UserInfoForm, CriteriaPriorityForm,
 )
 from .models import (
-    Criteria, UserInfo, Municipality,
+    Criteria, UserInfo, Municipality, Country,
     MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey
 )
 
@@ -25,48 +30,155 @@ def homepage(request):
             userinfo = UserInfo.objects.get(user=request.user)
         except UserInfo.DoesNotExist:
             userinfo = None
-
-    if request.method == 'POST':
-        next_action = request.POST.get('next_action')
-        name = request.POST.get('name')
-        country = request.POST.get('country')
-        municipality = request.POST.get('municipality')
-        # Lưu hoặc update userinfo
-        if request.user.is_authenticated:
-            userinfo, created = UserInfo.objects.update_or_create(
-                user=request.user,
-                defaults={
-                    'name': name,
-                    'country': country,
-                    'municipality_id': municipality
-                }
-            )
-        else:
-            userinfo = UserInfo.objects.create(
-                name=name,
-                country=country,
-                municipality_id=municipality
-            )
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            if next_action == 'match':
-                return JsonResponse({'success': True, 'redirect_url': reverse('matching_survey', args=[userinfo.id])})
-            elif next_action == 'evaluate':
-                return JsonResponse({'success': True, 'redirect_url': reverse('evaluation_survey', args=[userinfo.id])})
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid choice'})
-        else:
-            if next_action == 'match':
-                return redirect('matching_survey', user_info_id=userinfo.id)
-            elif next_action == 'evaluate':
-                return redirect('evaluation_survey', user_info_id=userinfo.id)
-            else:
-                return HttpResponse("Invalid choice.")
     context = {
         'country_choices': country_choices,
         'municipality_choices': municipality_choices,
-        'userinfo': userinfo
+        'userinfo': userinfo,
     }
-    return render(request, 'homepage.html', context)
+    return render(request, "homepage.html", context)
+
+def ajax_login(request):
+    if request.method == "POST":
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+             # Xác thực người dùng
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"success": False, "error": "Tên đăng nhập hoặc mật khẩu không đúng."})
+    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
+
+def ajax_logout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return JsonResponse({"success": True})
+
+def ajax_signup(request):
+    if request.method == "POST":
+        try:
+            # Lấy dữ liệu từ request
+            if request.content_type.startswith('application/json'):
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+
+            username = data.get("username", "").strip()
+            password = data.get("password", "").strip()
+            confirm_password = data.get("confirm_password", "").strip()
+            country_id = data.get("country")
+            municipality_id = data.get("municipality")
+            next_action = data.get('next_action', '')
+
+            # Validation
+            errors = []
+
+            if not username:
+                errors.append("Tên đăng nhập không được để trống")
+            elif User.objects.filter(username=username).exists():
+                errors.append("Tên đăng nhập đã tồn tại")
+
+            if not password:
+                errors.append("Mật khẩu không được để trống")
+            elif len(password) < 6:
+                errors.append("Mật khẩu phải có ít nhất 6 ký tự")
+
+            if password != confirm_password:
+                errors.append("Xác nhận mật khẩu không khớp")
+
+            if not country_id:
+                errors.append("Vui lòng chọn quốc tịch")
+
+            if not municipality_id:
+                errors.append("Vui lòng chọn tỉnh/thành phố")
+
+            if not next_action:
+                errors.append("Vui lòng chọn hành động tiếp theo")
+
+            if errors:
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors
+                })
+
+            # Tạo user mới
+            user = User.objects.create_user(
+                username=username,
+                password=password
+            )
+
+            # Tạo UserInfo
+            try:
+                country = Country.objects.get(id=country_id)
+                municipality = Municipality.objects.get(id=municipality_id)
+
+                userinfo = UserInfo.objects.create(
+                    user=user,
+                    name=username,
+                    country=country,
+                    municipality=municipality
+                )
+
+                # Đăng nhập user mới tạo
+                login(request, user)
+
+                # Xác định URL chuyển hướng
+                if next_action == 'match':
+                    redirect_url = reverse('matching_survey', args=[userinfo.id])
+                elif next_action == 'evaluate':
+                    redirect_url = reverse('evaluation_survey', args=[userinfo.id])
+                else:
+                    redirect_url = reverse('homepage')
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Đăng ký thành công! Chào mừng {user.username}',
+                    'redirect_url': redirect_url,
+                    'username': user.username
+                })
+
+            except (Country.DoesNotExist, Municipality.DoesNotExist):
+                # Xóa user nếu tạo UserInfo thất bại
+                user.delete()
+                return JsonResponse({
+                    'success': False,
+                    'errors': ['Thông tin quốc tịch hoặc tỉnh/thành không hợp lệ']
+                })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'errors': [f'Có lỗi xảy ra: {str(e)}']
+            })
+    else:
+        return JsonResponse({'success': False, 'errors': ['Method not allowed']})
+
+@login_required
+def ajax_update(request):
+    if request.method == "POST":
+        current_password = request.POST.get("current_password")
+        new_username = request.POST.get("username")
+        new_password = request.POST.get("password")
+
+        user = authenticate(request, username=request.user.username, password=current_password)
+        if not user:
+            return JsonResponse({"success": False, "error": "Current password is incorrect"})
+
+        if new_username:
+            user.username = new_username
+        if new_password:
+            user.set_password(new_password)
+        user.save()
+
+        # Login lại nếu đổi password
+        if new_password:
+            user = authenticate(request, username=user.username, password=new_password)
+            if user:
+                login(request, user)
+
+        return JsonResponse({"success": True, "username": user.username})
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)

@@ -14,10 +14,23 @@
             <input type="hidden" name="next_action" id="next_action_input" value="">
             {{ form.as_p }}
             <div class="d-grid gap-2">
-                <button type="button">Start Matching Survey</button>
-                <button type="button">Start Evaluation Survey</button>
+                <button type="button" id="start-matching-btn" class="btn btn-primary w-100 mb-2">Start Matching Survey</button>
+                <button type="button" id="start-evaluation-btn" class="btn btn-success w-100">Start Evaluation Survey</button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("start-matching-btn").onclick = function() {
+            window.location.href = "/matching/";
+        };
+        document.getElementById("start-evaluation-btn").onclick = function() {
+            window.location.href = "/evaluation/";
+        };
+    });
+</script>
 {% endblock %}
