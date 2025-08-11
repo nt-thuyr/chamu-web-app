@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth.hashers import check_password
 from .forms import (
     UserInfoForm, CriteriaPriorityForm,
 )
@@ -86,27 +86,50 @@ def ajax_signup(request):
 @login_required
 def ajax_update(request):
     if request.method == "POST":
-        current_password = request.POST.get("current_password")
-        new_username = request.POST.get("username")
-        new_password = request.POST.get("password")
+        user = request.user
+        new_username = request.POST.get("username", "").strip()
+        new_password = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
+        errors = []
+        changed = False
 
-        user = authenticate(request, username=request.user.username, password=current_password)
-        if not user:
-            return JsonResponse({"success": False, "error": "Current password is incorrect"})
+        # Bắt buộc nhập đủ
+        if not new_username or not new_password or not password2:
+            errors.append("Please fill in all fields.")
 
-        if new_username:
-            user.username = new_username
-        if new_password:
-            user.set_password(new_password)
-        user.save()
+        # Kiểm tra nhập lại mật khẩu
+        if new_password != password2:
+            errors.append("Passwords do not match.")
 
-        # Login lại nếu đổi password
-        if new_password:
-            user = authenticate(request, username=user.username, password=new_password)
-            if user:
-                login(request, user)
+        # Kiểm tra username
+        if new_username != user.username:
+            if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+                errors.append("Username already exists.")
+            elif len(new_username) < 1:
+                errors.append("Username cannot be empty.")
+            else:
+                user.username = new_username
+                changed = True
 
-        return JsonResponse({"success": True, "username": user.username})
+        # Kiểm tra password
+        if new_password and not check_password(new_password, user.password):
+            if len(new_password) < 6:
+                errors.append("Password must be at least 6 characters.")
+            else:
+                user.set_password(new_password)
+                changed = True
+
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
+
+        if changed:
+            user.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            return JsonResponse({"success": True, "changed": True, "username": user.username})
+        else:
+            return JsonResponse({"success": True, "changed": False})
+    return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
