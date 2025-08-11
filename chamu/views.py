@@ -6,19 +6,19 @@ from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 
 from .forms import (
-    UserInfoForm
+    UserInfoForm, CriteriaPriorityForm,
 )
 from .models import (
-    Criteria, UserInfo, Province,
-    ProvinceBaseScore, ProvinceMatchingScore, EvaluationSurvey
+    Criteria, UserInfo, Municipality,
+    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey
 )
 
 # -----------------
 # Views
 # -----------------
 def homepage(request):
-    nationality_choices = UserInfoForm.base_fields['nationality'].choices
-    province_choices = Province.objects.all()
+    country_choices = UserInfoForm.base_fields['country'].choices
+    municipality_choices = Municipality.objects.all()
     userinfo = None
     if request.user.is_authenticated:
         try:
@@ -29,23 +29,23 @@ def homepage(request):
     if request.method == 'POST':
         next_action = request.POST.get('next_action')
         name = request.POST.get('name')
-        nationality = request.POST.get('nationality')
-        province = request.POST.get('province')
+        country = request.POST.get('country')
+        municipality = request.POST.get('municipality')
         # Lưu hoặc update userinfo
         if request.user.is_authenticated:
             userinfo, created = UserInfo.objects.update_or_create(
                 user=request.user,
                 defaults={
                     'name': name,
-                    'nationality': nationality,
-                    'province_id': province
+                    'country': country,
+                    'municipality_id': municipality
                 }
             )
         else:
             userinfo = UserInfo.objects.create(
                 name=name,
-                nationality=nationality,
-                province_id=province
+                country=country,
+                municipality_id=municipality
             )
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             if next_action == 'match':
@@ -62,8 +62,8 @@ def homepage(request):
             else:
                 return HttpResponse("Invalid choice.")
     context = {
-        'nationality_choices': nationality_choices,
-        'province_choices': province_choices,
+        'country_choices': country_choices,
+        'municipality_choices': municipality_choices,
         'userinfo': userinfo
     }
     return render(request, 'homepage.html', context)
@@ -96,7 +96,7 @@ def evaluation_survey_view(request, user_info_id):
         print("Formset valid?", formset.is_valid())
         print("Formset errors:", formset.errors)
         formset = evaluation_survey_form_set(request.POST)
-        print(user_info.nationality)
+        print(user_info.country)
 
         if formset.is_valid():
             # Use bulk_create for better performance
@@ -106,15 +106,15 @@ def evaluation_survey_view(request, user_info_id):
                 if score:
                     evaluations.append(EvaluationSurvey(
                         user=user_info,
-                        province=user_info.province,
+                        municipality=user_info.municipality,
                         criteria=criteria_list[i],
                         score=score,
                     ))
 
             if evaluations:
                 EvaluationSurvey.objects.bulk_create(evaluations)
-                # Update province average score after new evaluations
-                update_province_avg_score(user_info.province, user_info.nationality)
+                # Update municipality average score after new evaluations
+                update_municipality_avg_score(user_info.municipality, user_info.country)
 
             return redirect('homepage')
     else:
@@ -130,80 +130,34 @@ def evaluation_survey_view(request, user_info_id):
         'user_info': user_info
     })
 
-
 def matching_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
     criteria_list = Criteria.objects.all().order_by('name')
-
-    if not criteria_list:
-        return HttpResponse("No criteria available for matching.")
-
-    # Dynamic form for matching (priority ranking)
-    class MatchingForm(forms.Form):
-        priority = forms.IntegerField(
-            min_value=1,
-            max_value=len(criteria_list),
-            label='Priority',
-            widget=forms.Select(choices=[(i, f'Number {i}') for i in range(1, len(criteria_list) + 1)]),
-            help_text='1 = Highest priority'
-        )
-
-    matching_survey_form_set = formset_factory(
-        MatchingForm,
-        extra=len(criteria_list),
-        can_delete=False
-    )
+    ranks = range(1, len(criteria_list) + 1)
 
     if request.method == 'POST':
-        formset = matching_survey_form_set(request.POST)
+        selected_criteria = {}
+        for rank in ranks:
+            cid = request.POST.get(f'rank_{rank}')
+            if cid:
+                selected_criteria[rank] = int(cid)
 
-        if formset.is_valid():
-            # Validate that all priorities are unique
-            form_criteria = zip(formset.forms, criteria_list)
+        # Kiểm tra nếu người dùng đã chọn một tiêu chí nhiều lần
+        if len(set(selected_criteria.values())) != len(selected_criteria.values()):
+            return render(request, 'matching_survey.html', {
+                'criteria_list': criteria_list,
+                'ranks': ranks,
+                'error': 'Mỗi tiêu chí chỉ được chọn một lần.'
+            })
 
-            priorities = []
-            for form in formset:
-                priority = form.cleaned_data.get('priority')
-                if priority:
-                    priorities.append(priority)
-
-            if len(set(priorities)) != len(priorities):
-                return render(request, 'matching_survey.html', {
-                    'formset': formset,
-                    'criteria_list': criteria_list,
-                    'form_criteria': form_criteria,
-                    'user_info': user_info,
-                    'error': 'All priorities must be unique.'
-                })
-
-            # Store user preferences in session (no database save)
-            user_preferences = {}
-            for i, form in enumerate(formset):
-                priority = form.cleaned_data.get('priority')
-                if priority:
-                    user_preferences[criteria_list[i].id] = {
-                        'criteria_id': criteria_list[i].id,
-                        'criteria_name': criteria_list[i].name,
-                        'priority': priority
-                    }
-
-            # Store preferences in session
-            request.session[f'preferences_{user_info_id}'] = user_preferences
-
-            # Calculate matching scores and redirect to results
-            return redirect('matching_results', user_info_id=user_info.id)
-    else:
-        formset = matching_survey_form_set()
-
-    form_criteria = zip(formset.forms, criteria_list)
+        # Lưu kết quả vào session
+        request.session[f'preferences_{user_info_id}'] = selected_criteria
+        return redirect('matching_results', user_info_id=user_info.id)
 
     return render(request, 'matching_survey.html', {
-        'formset': formset,
         'criteria_list': criteria_list,
-        'form_criteria': form_criteria,
-        'user_info': user_info
+        'ranks': ranks,
     })
-
 
 def matching_results_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
@@ -215,8 +169,8 @@ def matching_results_view(request, user_info_id):
     if not user_preferences:
         return redirect('matching_survey', user_info_id=user_info.id)
 
-    # Calculate matching scores for all provinces
-    matching_results = calculate_province_matching_scores(user_preferences, user_info.nationality)
+    # Calculate matching scores for all municipalities
+    matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country)
 
     # Sort by matching score (descending)
     matching_results = sorted(matching_results, key=lambda x: x['score'], reverse=True)
@@ -239,48 +193,48 @@ def normalize_score(raw_value, min_value, max_value):
     return max(1, min(5, round(score, 1)))
 
 
-def update_province_base_score(province, criteria, nationality, raw_data):
+def update_municipality_base_score(municipality, criteria, country, raw_data):
     min_value = 0
     max_value = 10
     normalized_score = normalize_score(raw_data, min_value, max_value)
-    ProvinceBaseScore.objects.update_or_create(
-        province=province,
+    MunicipalityBaseScore.objects.update_or_create(
+        municipality=municipality,
         criteria=criteria,
-        nationality=nationality,
+        country=country,
         defaults={'base_score': normalized_score}
     )
 
 
-def update_province_avg_score(province, nationality):
+def update_municipality_avg_score(municipality, country):
     """Update average scores from user evaluations"""
     criteria_list = Criteria.objects.all()
     for criteria in criteria_list:
         avg_score = EvaluationSurvey.objects.filter(
-            province=province, criteria=criteria
+            municipality=municipality, criteria=criteria
         ).aggregate(Avg('score'))['score__avg'] or 0.0
 
-        ProvinceMatchingScore.objects.update_or_create(
-            province=province,
+        MunicipalityMatchingScore.objects.update_or_create(
+            municipality=municipality,
             criteria=criteria,
-            nationality=nationality,
+            country=country,
             defaults={'avg_score': avg_score}
         )
     # Update final scores after recalculating averages
-    update_province_final_score(province, nationality)
+    update_municipality_final_score(municipality, country)
 
-def update_province_final_score(province, nationality):
+def update_municipality_final_score(municipality, country):
     criteria_list = Criteria.objects.all()
     for criteria in criteria_list:
         try:
-            base_score_obj = ProvinceBaseScore.objects.get(province=province, criteria=criteria, nationality=nationality)
+            base_score_obj = MunicipalityBaseScore.objects.get(municipality=municipality, criteria=criteria, country=country)
             base_score = base_score_obj.base_score
-        except ProvinceBaseScore.DoesNotExist:
+        except MunicipalityBaseScore.DoesNotExist:
             base_score = 1.0
 
         try:
-            avg_score_obj = ProvinceMatchingScore.objects.get(province=province, criteria=criteria, nationality=nationality)
+            avg_score_obj = MunicipalityMatchingScore.objects.get(municipality=municipality, criteria=criteria, country=country)
             avg_score = avg_score_obj.avg_score
-        except ProvinceMatchingScore.DoesNotExist:
+        except MunicipalityMatchingScore.DoesNotExist:
             avg_score = None
 
         if avg_score is not None:
@@ -288,24 +242,24 @@ def update_province_final_score(province, nationality):
         else:
             final_score = base_score
 
-        ProvinceMatchingScore.objects.update_or_create(
-            province=province,
+        MunicipalityMatchingScore.objects.update_or_create(
+            municipality=municipality,
             criteria=criteria,
-            nationality=nationality,
+            country=country,
             defaults={'final_score': final_score}
         )
 
-def calculate_province_matching_scores(user_preferences, nationality):
+def calculate_municipality_matching_scores(user_preferences, country):
     """
-    Calculate matching scores for all provinces based on user preferences
+    Calculate matching scores for all municipalitys based on user preferences
     Formula: (D1×P1 + D2×P2 + ...) / (P1 + P2 + ...)
-    Where D = Data (province score), P = Preference weight
+    Where D = Data (municipality score), P = Preference weight
     """
-    provinces = Province.objects.all()
+    municipalitys = Municipality.objects.all()
 
     matching_results = []
 
-    for province in provinces:
+    for municipality in municipalitys:
         total_weighted_score = 0
         total_weight = 0
         criteria_details = []
@@ -321,43 +275,43 @@ def calculate_province_matching_scores(user_preferences, nationality):
             except Criteria.DoesNotExist:
                 continue
 
-            # Get province score for this criteria
-            # Try to get from ProvinceMatchingScore (user evaluations) first
+            # Get municipality score for this criteria
+            # Try to get from MunicipalityMatchingScore (user evaluations) first
             try:
-                province_score_obj = ProvinceMatchingScore.objects.get(
-                    province=province,
+                municipality_score_obj = MunicipalityMatchingScore.objects.get(
+                    municipality=municipality,
                     criteria=criteria,
-                    nationality=nationality,
+                    country=country,
                 )
-                province_score = province_score_obj.final_score
-            except ProvinceMatchingScore.DoesNotExist:
+                municipality_score = municipality_score_obj.final_score
+            except MunicipalityMatchingScore.DoesNotExist:
                 # Fallback to base score if no user evaluations
                 try:
-                    base_score_obj = ProvinceBaseScore.objects.get(
-                        province=province,
+                    base_score_obj = MunicipalityBaseScore.objects.get(
+                        municipality=municipality,
                         criteria=criteria,
-                        nationality=nationality,
+                        country=country,
                     )
-                    province_score = base_score_obj.base_score
-                except ProvinceBaseScore.DoesNotExist:
-                    province_score = 1.0  # Default score
+                    municipality_score = base_score_obj.base_score
+                except MunicipalityBaseScore.DoesNotExist:
+                    municipality_score = 1.0  # Default score
 
-            total_weighted_score += province_score * weight
+            total_weighted_score += municipality_score * weight
             total_weight += weight
 
             criteria_details.append({
                 'criteria_name': preference_data['criteria_name'],
                 'priority': preference_data['priority'],
                 'weight': weight,
-                'province_score': province_score,
-                'weighted_score': province_score * weight
+                'municipality_score': municipality_score,
+                'weighted_score': municipality_score * weight
             })
 
         # Calculate final matching score
         matching_score = total_weighted_score / total_weight if total_weight > 0 else 0
 
         matching_results.append({
-            'province': province,
+            'municipality': municipality,
             'score': round(matching_score, 2),
             'criteria_details': criteria_details
         })
@@ -365,9 +319,9 @@ def calculate_province_matching_scores(user_preferences, nationality):
     return matching_results
 
 
-def get_province_matching_details(request, user_info_id, province_id):
-    """API endpoint to get detailed matching information for a specific province"""
-    province = get_object_or_404(Province, id=province_id)
+def get_municipality_matching_details(request, user_info_id, municipality_id):
+    """API endpoint to get detailed matching information for a specific municipality"""
+    municipality = get_object_or_404(Municipality, id=municipality_id)
 
     # Get user preferences from session
     preferences_key = f'preferences_{user_info_id}'
@@ -388,36 +342,36 @@ def get_province_matching_details(request, user_info_id, province_id):
         except Criteria.DoesNotExist:
             continue
 
-        # Get province score
+        # Get municipality score
         try:
-            province_score_obj = ProvinceMatchingScore.objects.get(
-                province=province,
+            municipality_score_obj = MunicipalityMatchingScore.objects.get(
+                municipality=municipality,
                 criteria=criteria
             )
-            province_score = province_score_obj.avg_score
+            municipality_score = municipality_score_obj.avg_score
             score_source = "Đánh giá của người dùng"
-        except ProvinceMatchingScore.DoesNotExist:
+        except MunicipalityMatchingScore.DoesNotExist:
             try:
-                base_score_obj = ProvinceBaseScore.objects.get(
-                    province=province,
+                base_score_obj = MunicipalityBaseScore.objects.get(
+                    municipality=municipality,
                     criteria=criteria
                 )
-                province_score = base_score_obj.base_score
+                municipality_score = base_score_obj.base_score
                 score_source = "Dữ liệu cơ sở"
-            except ProvinceBaseScore.DoesNotExist:
-                province_score = 1.0
+            except MunicipalityBaseScore.DoesNotExist:
+                municipality_score = 1.0
                 score_source = "Điểm mặc định"
 
         details.append({
             'criteria_name': preference_data['criteria_name'],
             'priority': preference_data['priority'],
             'weight': weight,
-            'province_score': province_score,
-            'weighted_score': province_score * weight,
+            'municipality_score': municipality_score,
+            'weighted_score': municipality_score * weight,
             'score_source': score_source
         })
 
     return JsonResponse({
-        'province_name': province.name,
+        'municipality_name': municipality.name,
         'details': details
     })

@@ -6,34 +6,81 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <h2 class="mb-4 text-center">{% trans "Matching Criteria Survey" %}</h2>
+        <h2 class="mb-4 text-center">{% trans "Finding Your Dream Living Area" %}</h2>
         <p class="mb-3 text-center">{% trans "Please rank the criteria according to your priority (1 = Highest)." %}</p>
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-        <form method="post" novalidate>
+
+        <div id="alert-container"></div>
+
+        <form method="post" id="survey-form" novalidate>
             {% csrf_token %}
-            {{ formset.management_form }}
-            <ul class="list-group mb-3">
-                {% for form, criteria in form_criteria %}
-                    <li class="list-group-item">
-                        <strong>{{ criteria.name }}</strong>
-                        <div class="mt-2">
-                            {{ form.priority }}
-                            {% for error in form.priority.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                            {% if form.priority.help_text %}
-                                <div class="form-text">{{ form.priority.help_text }}</div>
-                            {% endif %}
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary">{% trans "Submit Matching Survey" %}</button>
+            {% for rank in ranks %}
+                <div class="mb-3">
+                    <label for="rank_{{ rank }}" class="form-label">Rank {{ rank }}:</label>
+                    <select class="form-select" id="rank_{{ rank }}" name="rank_{{ rank }}" required>
+                        <option value="">--- {% trans "Select a criteria" %} ---</option>
+                        {% for criteria in criteria_list %}
+                            <option value="{{ criteria.id }}">{{ criteria.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endfor %}
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary" id="submit-button">{% trans "Submit Matching Survey" %}</button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('survey-form');
+        const selects = document.querySelectorAll('select');
+        const alertContainer = document.getElementById('alert-container');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Ngăn chặn form submit mặc định
+
+            // Xóa tất cả cảnh báo cũ
+            alertContainer.innerHTML = '';
+
+            const selectedValues = new Set();
+            let hasDuplicate = false;
+            let hasEmpty = false;
+
+            selects.forEach(s => {
+                if (s.value) {
+                    if (selectedValues.has(s.value)) {
+                        hasDuplicate = true;
+                    }
+                    selectedValues.add(s.value);
+                } else {
+                    hasEmpty = true;
+                }
+            });
+
+            if (hasEmpty) {
+                showAlert('Please select a criteria for all ranks.', 'danger');
+                return; // Dừng lại nếu có ô chưa chọn
+            }
+
+            if (hasDuplicate) {
+                showAlert('Each criteria must be chosen only once.', 'danger');
+                return; // Dừng lại nếu có tiêu chí bị trùng
+            }
+
+            // Nếu mọi thứ đều hợp lệ, submit form
+            form.submit();
+        });
+
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+    });
+</script>
 {% endblock %}

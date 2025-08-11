@@ -123,3 +123,15 @@ form {
     background-color: #27ae60;
     transform: translateY(-2px);
 }
+
+/* Áp dụng cho toàn bộ trang web hoặc một phần tử cụ thể */
+body, .my-container, table {
+  /* Vô hiệu hóa việc chọn văn bản */
+  -webkit-user-select: none; /* Dành cho trình duyệt WebKit (Chrome, Safari) */
+  -moz-user-select: none;    /* Dành cho Firefox */
+  -ms-user-select: none;     /* Dành cho Internet Explorer */
+  user-select: none;         /* Tiêu chuẩn */
+
+  /* Ẩn con trỏ nhấp nháy */
+  cursor: default;
+}
