@@ -6,6 +6,8 @@ User = settings.AUTH_USER_MODEL
 class Criteria(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="e.g. cost of living, local shops, ...")
     slug = models.SlugField(unique=True, help_text="e.g. cost_of_living, local_shops, ...")
+    left_label = models.CharField(max_length=100, help_text="Not good. e.g. 'Expensive', 'Low', ...")
+    right_label = models.CharField(max_length=100, help_text="Good. e.g. 'Cheap', 'High', ...")
 
     def __str__(self):
         return self.name
@@ -42,6 +44,7 @@ class UserInfo(models.Model):
 # -----------------
 class ProvinceBaseScore(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    nationality = models.ForeignKey(Nationality, on_delete=models.CASCADE)
     criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
     base_score = models.FloatField(default=0.0)
 

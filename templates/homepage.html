@@ -9,6 +9,7 @@
         <h2 class="mb-4 text-center">Where's next, JAPAN?</h2>
         <form id="main-info-form" method="post" novalidate>
             {% csrf_token %}
+            {{ formset.management_form }}
             <!-- Hidden field to track next_action -->
             <input type="hidden" name="next_action" id="next_action_input" value="">
             {{ form.as_p }}
