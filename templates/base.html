@@ -26,13 +26,13 @@
                         </li>
                     {% else %}
                         {% if request.resolver_match.url_name == "homepage" %}
-                            <li class="nav-item me-2">
+                            <li class="nav-item">
                                 <button id="login-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
                                     {% trans "Log in" %}
                                 </button>
                             </li>
                              <li class="nav-item">
-                                <button id="signup-btn" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#signupModal">
+                                <button id="signup-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
                                     {% trans "Sign up" %}
                                 </button>
                             </li>
