@@ -62,11 +62,6 @@ class MatchInfoForm(forms.ModelForm):
         required=True,
         label='Prefecture you want to move in'
     )
-    target_municipality = forms.ModelChoiceField(
-        queryset=Municipality.objects.none(),
-        required=True,
-        label='Municipality you want to move in'
-    )
     country = forms.ModelChoiceField(
         queryset=Country.objects.all().order_by('name'),    # type: ignore
         required=True,
@@ -75,7 +70,7 @@ class MatchInfoForm(forms.ModelForm):
 
     class Meta:
         model = UserInfo
-        fields = ['name', 'country', 'target_prefecture', 'target_municipality']
+        fields = ['name', 'country', 'target_prefecture']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -83,13 +78,6 @@ class MatchInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['country'].queryset = Country.objects.all().order_by('name')
-        target_prefecture_id = self.data.get('target_prefecture')
-        if target_prefecture_id:
-            try:
-                self.fields['target_municipality'].queryset = Municipality.objects.filter(  # type: ignore
-                    prefecture_id=target_prefecture_id)
-            except (ValueError, TypeError):
-                pass
 
 # --- Other base form ---
 class EvaluationSurveyBaseForm(forms.Form):

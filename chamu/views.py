@@ -418,11 +418,23 @@ def match_info_view(request):
     if request.method == 'POST':
         form = MatchInfoForm(request.POST)
         if form.is_valid():
-            user_info = form.save()
-            # Chuyển hướng đến survey của match
-            return redirect('matching_survey', user_info_id=user_info.id)
+            # Lấy đối tượng Prefecture từ form
+            target_prefecture = form.cleaned_data['target_prefecture']
+
+            # Ghi lại UserInfo
+            user_info = form.save(commit=False)
+            user_info.save()
+
+            # TODO: Xử lý với đối tượng target_prefecture ở đây
+            # Ví dụ: truyền nó vào một session hoặc redirect đến trang khảo sát
+            print(f"Target prefecture đã được chọn: {target_prefecture.name}")
+
+            return redirect('some_other_page')
+        else:
+            return render(request, 'match_info.html', {'form': form})
     else:
         form = MatchInfoForm()
+
     return render(request, 'match_info.html', {'form': form})
 
 

@@ -26,7 +26,7 @@ label {
     background-color: #f8f9fa;
     color: #495057;
     transition: all 0.3s ease-in-out; 
-    box-shadow: 1 1px 10px rgba(0, 0, 0, 0.2); 
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
     letter-spacing: 2px;
 }
 
