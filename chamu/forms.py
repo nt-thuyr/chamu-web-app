@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserInfo, EvaluationSurvey, City, Province, Nationality
+from .models import UserInfo, EvaluationSurvey, Prefecture, Municipality, Country
 
 class UserInfoForm(forms.ModelForm):
     # This field allows the user to choose the next action they want to take
@@ -17,16 +17,16 @@ class UserInfoForm(forms.ModelForm):
     class Meta:
         model = UserInfo
         # Specify the fields to include in the form
-        fields = ['name', 'nationality', 'province']
+        fields = ['name', 'country', 'municipality']
         labels = {
             'name': 'Your name',
-            'nationality': 'Your nationality',
-            'province': 'Your current province',
+            'country': 'Your country',
+            'municipality': 'Your current municipality',
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'nationality': forms.Select(attrs={'class': 'form-control'}),
-            'province': forms.Select(attrs={'class': 'form-control'}),
+            'country': forms.Select(attrs={'class': 'form-control'}),
+            'municipality': forms.Select(attrs={'class': 'form-control'}),
         }
 
 class EvaluationSurveyBaseForm(forms.Form):
