@@ -21,12 +21,33 @@ class Command(BaseCommand):
                 next(reader)
 
                 for row in reader:
+                    # Ensure the row has at least 3 columns to avoid an error
                     if len(row) >= 3:
-                        criteria_name, left_label, right_label = row
-                        criteria, _ = Criteria.objects.get_or_create(
+                        criteria_name, left_label, right_label = row[:3]
+
+                        # Check if the row has a fourth column for 'is_reverse'
+                        if len(row) >= 4:
+                            is_reverse_str = row[3]
+                            is_reverse_bool = (is_reverse_str.lower() == 'true')
+                        else:
+                            # If the fourth column is missing, default to False
+                            is_reverse_bool = False
+
+                        # Get the existing criteria or create a new one
+                        criteria, created = Criteria.objects.get_or_create(
                             name=criteria_name,
-                            defaults={'left_label': left_label, 'right_label': right_label}
+                            defaults={
+                                'left_label': left_label,
+                                'right_label': right_label,
+                                'is_reverse': is_reverse_bool  # Use the value from the CSV or the default
+                            }
                         )
+
+                        # If the object already existed and the is_reverse value from the CSV is different, update it.
+                        # This handles cases where you update the value for an existing criteria.
+                        if not created and criteria.is_reverse != is_reverse_bool:
+                            criteria.is_reverse = is_reverse_bool
+                            criteria.save()
 
             self.stdout.write(self.style.SUCCESS("Nhập dữ liệu thành công!"))
 

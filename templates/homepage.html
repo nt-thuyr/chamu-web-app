@@ -1,32 +1,36 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% trans "Home" %}{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <h2 class="mb-4 text-center">{% trans "Welcome to Province Survey" %}</h2>
-        <form method="post" novalidate>
+        <h2 class="mb-4 text-center">Where's next, JAPAN?</h2>
+        <form id="main-info-form" method="post" novalidate>
             {% csrf_token %}
-            {{ form.non_field_errors }}
-            {% for field in form %}
-                <div class="mb-3">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                    {% endif %}
-                    {% for error in field.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            <div class="d-grid gap-2">
-                <button type="submit" name="next_action" value="match" class="btn btn-primary">{% trans "Start Matching Survey" %}</button>
-                <button type="submit" name="next_action" value="evaluate" class="btn btn-secondary">{% trans "Start Evaluation Survey" %}</button>
+            {{ formset.management_form }}
+            <!-- Hidden field to track next_action -->
+            <input type="hidden" name="next_action" id="next_action_input" value="">
+            {{ form.as_p }}
+            <div class="d-grid gap-2 col-6 mx-auto">
+                <button type="button" id="start-matching-btn" class="btn btn-outline-primary w-100">Start Matching Survey</button>
+                <button type="button" id="start-evaluation-btn" class="btn btn-outline-primary w-100">Start Evaluation Survey</button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("start-matching-btn").onclick = function() {
+            window.location.href = "/matching/";
+        };
+        document.getElementById("start-evaluation-btn").onclick = function() {
+            window.location.href = "/evaluation/";
+        };
+    });
+</script>
 {% endblock %}

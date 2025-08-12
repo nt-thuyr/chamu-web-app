@@ -1,66 +1,39 @@
 {% extends 'base.html' %}
-{% load i18n %}
-
-{% block title %}{% trans "Matching Results" %}{% endblock %}
+{% block title %}Matching Survey{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-        <h2 class="mb-4 text-center">{% trans "Matching Results by Province" %}</h2>
-        <div class="mb-3">
-            <h5>{% trans "Your Criteria Priorities" %}:</h5>
-            <ul class="list-group">
-                {% for pref in user_preferences %}
-                    <li class="list-group-item">
-                        <strong>{{ pref.criteria_name }}</strong>: {% trans "Priority" %} {{ pref.priority }}
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-        <table class="table table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>{% trans "Province" %}</th>
-                    <th>{% trans "Matching Score" %}</th>
-                    <th>{% trans "Details" %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in matching_results %}
-                    <tr>
-                        <td>{{ result.province.name }}</td>
-                        <td><strong>{{ result.score }}</strong></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" aria-expanded="false">
-                                {% trans "View Details" %}
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="collapse" id="details-{{ forloop.counter }}">
-                        <td colspan="3">
-                            <ul>
-                                {% for detail in result.criteria_details %}
-                                    <li>
-                                        <strong>{{ detail.criteria_name }}</strong>: 
-                                        {% trans "Priority" %} {{ detail.priority }}, 
-                                        {% trans "Weight" %} {{ detail.weight }}, 
-                                        {% trans "Score" %} {{ detail.province_score }},
-                                        {% trans "Weighted Score" %} {{ detail.weighted_score }}
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="3">{% trans "No results found." %}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="mt-4 text-center">
-            <a href="{% url 'homepage' %}" class="btn btn-secondary">{% trans "Back to Home" %}</a>
-        </div>
-    </div>
-</div>
+<h2>Set Your Criteria Priority</h2>
+<form method="post">
+    {% csrf_token %}
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Criteria</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rank in ranks %}
+            <tr>
+                <td>Rank {{ rank }}</td>
+                <td>
+                    <label for="rank_{{ rank }}" class="form-label">
+                        Select criteria for rank {{ rank }}:
+                    </label>
+                    <select name="rank_{{ rank }}" id="rank_{{ rank }}" required class="form-select">
+                        <option value="">-- Select criteria --</option>
+                        {% for criteria in criteria_list %}
+                            <option value="{{ criteria.id }}">{{ criteria.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <button type="submit" class="btn btn-success">Submit</button>
+</form>
 {% endblock %}
