@@ -433,6 +433,8 @@ def evaluate_info_view(request):
             user_info = form.save()
             # Chuyển hướng đến survey của evaluate
             return redirect('evaluation_survey', user_info_id=user_info.id)
+        else:
+            return render(request, 'evaluate_info.html', {'form': form})
     else:
         form = EvaluateInfoForm()
     return render(request, 'evaluate_info.html', {'form': form})

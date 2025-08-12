@@ -18,10 +18,12 @@
                     <div class="card-body">
                         <form method="post" id="evaluate-info-form">
                             {% csrf_token %}
+                            {{ form.non_field_errors }}
 
                             <div class="mb-3">
                                 <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
                                 {{ form.name }}
+                                {{ form.name.errors }}
                             </div>
                             <div class="mb-3">
                                 <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
@@ -49,19 +51,24 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Tất cả các biến đều được khai báo bên trong hàm này
-            const prefectureSelect = document.getElementById('id_target_prefecture');
-            const municipalitySelect = document.getElementById('id_target_municipality');
+            const nameInput = document.getElementById('id_name');
+            const countrySelect = document.getElementById('id_country');
+            const prefectureSelect = document.getElementById('id_current_prefecture');
+            const municipalitySelect = document.getElementById('id_current_municipality');
             const submitButton = document.querySelector('button[type="submit"]');
 
-            // Vô hiệu hóa nút submit khi tải trang
             submitButton.disabled = true;
 
-            // Hàm này cũng nằm trong phạm vi của 'DOMContentLoaded'
             function checkFormValidity() {
-                submitButton.disabled = !(prefectureSelect.value && municipalitySelect.value);
+                if (nameInput.value && countrySelect.value && prefectureSelect.value && municipalitySelect.value) {
+                    submitButton.disabled = false;
+                } else {
+                    submitButton.disabled = true;
+                }
             }
 
+            nameInput.addEventListener('input', checkFormValidity);
+            countrySelect.addEventListener('change', checkFormValidity);
             prefectureSelect.addEventListener('change', function() {
                 const prefectureId = this.value;
 

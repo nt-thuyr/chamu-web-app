@@ -36,12 +36,22 @@ class BaseUserInfoForm(forms.ModelForm):
 # --- Form for Evaluate flow ---
 # Extends the base form.
 class EvaluateInfoForm(BaseUserInfoForm):
-    class EvaluateInfoForm(BaseUserInfoForm):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            # Set required fields for evaluation
-            self.fields['current_prefecture'].required = True
-            self.fields['current_municipality'].required = True
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Đặt lại required=True cho các trường
+        self.fields['current_prefecture'].required = True
+        self.fields['current_municipality'].required = True
+
+        # Lấy prefecture_id từ dữ liệu POST, nếu có
+        prefecture_id = self.data.get('current_prefecture')
+        if prefecture_id:
+            try:
+                # Cập nhật queryset cho municipality
+                self.fields['current_municipality'].queryset = Municipality.objects.filter(prefecture_id=prefecture_id) # type: ignore
+            except (ValueError, TypeError):
+                # Xử lý trường hợp prefecture_id không hợp lệ
+                pass
 
 
 # --- Form for Match flow ---
@@ -73,6 +83,13 @@ class MatchInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['country'].queryset = Country.objects.all().order_by('name')
+        target_prefecture_id = self.data.get('target_prefecture')
+        if target_prefecture_id:
+            try:
+                self.fields['target_municipality'].queryset = Municipality.objects.filter(  # type: ignore
+                    prefecture_id=target_prefecture_id)
+            except (ValueError, TypeError):
+                pass
 
 # --- Other base form ---
 class EvaluationSurveyBaseForm(forms.Form):

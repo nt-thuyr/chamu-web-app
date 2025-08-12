@@ -25,11 +25,15 @@
 {% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Sử dụng Django template tags để tạo URL động
+        const matchInfoUrl = "{% url 'match_info' %}";
+        const evaluateInfoUrl = "{% url 'evaluate_info' %}";
+
         document.getElementById("start-matching-btn").onclick = function() {
-            window.location.href = "/matching/";
+            window.location.href = matchInfoUrl;
         };
         document.getElementById("start-evaluation-btn").onclick = function() {
-            window.location.href = "/evaluation/";
+            window.location.href = evaluateInfoUrl;
         };
     });
 </script>
