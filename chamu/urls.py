@@ -7,9 +7,12 @@ urlpatterns = [
     path('ajax/signup/', views.ajax_signup, name='ajax_signup'),
     path('ajax/update/', views.ajax_update, name='ajax_update'),
     path('ajax/logout/', views.ajax_logout, name='ajax_logout'),
-    path('evaluation/<int:user_info_id>/', views.evaluation_survey_view, name='evaluation_survey'),
-    path('matching/<int:user_info_id>/', views.matching_survey_view, name='matching_survey'),
-    path('results/<int:user_info_id>/', views.matching_results_view, name='matching_results'),
     # path('api/matching-details/<int:user_info_id>/<int:province_id>/',
     #      views.get_province_matching_details, name='matching_details_api'),
+    path('match-info/', views.match_info_view, name='match_info'),
+    path('evaluate-info/', views.evaluate_info_view, name='evaluate_info'),
+    # Các URL cho survey
+    path('survey/<int:user_info_id>/match/', views.matching_survey_view, name='matching_survey'),
+    path('survey/<int:user_info_id>/evaluate/', views.evaluation_survey_view, name='evaluation_survey'),
+    path('survey/<int:user_info_id>/match/result', views.matching_results_view, name='matching_results'),
 ]

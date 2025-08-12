@@ -45,6 +45,7 @@ class UserInfo(models.Model):
     name = models.CharField(max_length=100)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     municipality = models.ForeignKey(Municipality, on_delete=models.SET_NULL, null=True, blank=True)
+    target_prefecture = models.ForeignKey(Prefecture, on_delete=models.SET_NULL, null=True, blank=True)
     def __str__(self):
         return self.name
 

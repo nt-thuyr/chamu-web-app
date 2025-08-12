@@ -8,18 +8,18 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from .forms import (
-    UserInfoForm,
+    BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey
+    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture
 )
 
 # -----------------
 # Views
 # -----------------
 def homepage(request):
-    country_choices = UserInfoForm.base_fields['country'].choices
+    country_choices = BaseUserInfoForm.base_fields['country'].choices
     municipality_choices = Municipality.objects.all()
     userinfo = None
     if request.user.is_authenticated:
@@ -179,14 +179,6 @@ def matching_survey_view(request, user_info_id):
             if cid:
                 selected_criteria[rank] = int(cid)
 
-        # Kiểm tra nếu người dùng đã chọn một tiêu chí nhiều lần
-        if len(set(selected_criteria.values())) != len(selected_criteria.values()):
-            return render(request, 'matching_survey.html', {
-                'criteria_list': criteria_list,
-                'ranks': ranks,
-                'error': 'Mỗi tiêu chí chỉ được chọn một lần.'
-            })
-
         # Lưu kết quả vào session
         request.session[f'preferences_{user_info_id}'] = selected_criteria
         return redirect('matching_results', user_info_id=user_info.id)
@@ -199,25 +191,39 @@ def matching_survey_view(request, user_info_id):
 def matching_results_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
 
-    # Get user preferences from session
     preferences_key = f'preferences_{user_info_id}'
     user_preferences = request.session.get(preferences_key)
 
     if not user_preferences:
         return redirect('matching_survey', user_info_id=user_info.id)
 
-    # Calculate matching scores for all municipalities
-    matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country)
+    # Get all-criteria IDs from user preferences
+    criteria_ids = user_preferences.values()
+    criteria_map = {
+        c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)
+    }
 
-    # Sort by matching score (descending)
-    matching_results = sorted(matching_results, key=lambda x: x['score'], reverse=True)
+    matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country)
+    matching_results = sorted(matching_results, key=lambda x: x['score'])
+
+    # Sort user preferences by rank (key) (make sure keys are integers)
+    sorted_user_preferences_items = sorted(user_preferences.items(), key=lambda item: int(item[0]))
+
+    # Create template for matching_results.html
+    user_preferences_for_template = []
+    for rank, cid in sorted_user_preferences_items:
+        user_preferences_for_template.append({
+            'priority': int(rank),
+            'criteria_id': int(cid),
+            # Get criteria name from the map
+            'criteria_name': criteria_map.get(int(cid), 'N/A')
+        })
 
     return render(request, 'matching_results.html', {
         'user_info': user_info,
         'matching_results': matching_results,
-        'user_preferences': sorted(user_preferences.values(), key=lambda x: x['priority'])
+        'user_preferences': user_preferences_for_template,
     })
-
 
 # -----------------
 # Functions
@@ -268,65 +274,79 @@ def update_municipality_final_score(municipality, country):
 
 def calculate_municipality_matching_scores(user_preferences, country):
     """
-    Calculate matching scores for all municipalities based on user preferences
-    Formula: (D1×P1 + D2×P2 + ...) / (P1 + P2 + ...)
-    Where D = Data (municipality score), P = Preference weight
+    Tính điểm khớp lệnh cho tất cả các đô thị dựa trên ưu tiên của người dùng.
+    Phiên bản này được tối ưu hóa hiệu suất bằng cách truy vấn dữ liệu hàng loạt.
     """
-    municipalities = Municipality.objects.all()
 
+    # 1. Chuẩn bị dữ liệu đầu vào và các tham số
+    # user_preferences có định dạng { '1': 5, '2': 3, ... }
+
+    # Lấy danh sách ID các tiêu chí người dùng đã chọn
+    criteria_ids = user_preferences.values()
+
+    # Lấy tất cả các tiêu chí đã chọn trong một truy vấn và lưu vào một dictionary
+    criteria_map = {c.id: c for c in Criteria.objects.filter(id__in=criteria_ids)}
+
+    # 2. Lấy tất cả điểm số cần thiết trong một vài truy vấn lớn
+    base_scores_qs = MunicipalityBaseScore.objects.filter(
+        criteria__id__in=criteria_ids,
+        country=country
+    )
+    base_scores_map = {
+        (score.municipality_id, score.criteria_id): score.base_score
+        for score in base_scores_qs
+    }
+
+    matching_scores_qs = MunicipalityMatchingScore.objects.filter(
+        criteria__id__in=criteria_ids,
+        country=country
+    )
+    matching_scores_map = {
+        (score.municipality_id, score.criteria_id): score.final_score
+        for score in matching_scores_qs
+    }
+
+    # 3. Lấy tất cả các đô thị và prefetch các điểm số liên quan
+    municipalities = Municipality.objects.all().order_by('name')
+
+    # 4. Tính toán điểm số trong bộ nhớ
     matching_results = []
+    max_priority = len(user_preferences) + 1
 
     for municipality in municipalities:
         total_weighted_score = 0
         total_weight = 0
         criteria_details = []
 
-        for criteria_id, preference_data in user_preferences.items():
-            # Convert priority to weight (lower priority number = higher weight)
-            max_priority = len(user_preferences) + 1
-            weight = max_priority - preference_data['priority']
+        # Lặp qua các ưu tiên của người dùng
+        for rank_str, criteria_id in user_preferences.items():
+            rank = int(rank_str)
+            weight = max_priority - rank
 
-            # Get criteria object
-            try:
-                criteria = Criteria.objects.get(id=criteria_id)
-            except Criteria.DoesNotExist:
+            # Lấy đối tượng tiêu chí từ map đã tạo
+            criteria = criteria_map.get(criteria_id)
+            if not criteria:
                 continue
 
-            # Get municipality score for this criteria
-            # Try to get from MunicipalityMatchingScore (user evaluations) first
-            try:
-                municipality_score_obj = MunicipalityMatchingScore.objects.get(
-                    municipality=municipality,
-                    criteria=criteria,
-                    country=country,
-                )
-                municipality_score = municipality_score_obj.final_score
-            except MunicipalityMatchingScore.DoesNotExist:
-                # Fallback to base score if no user evaluations
-                try:
-                    base_score_obj = MunicipalityBaseScore.objects.get(
-                        municipality=municipality,
-                        criteria=criteria,
-                        country=country,
-                    )
-                    municipality_score = base_score_obj.base_score
-                except MunicipalityBaseScore.DoesNotExist:
-                    municipality_score = 1.0  # Default score
+            # Lấy điểm số từ map đã tạo, rất nhanh
+            # Ưu tiên matching score, nếu không có thì dùng base score
+            score_tuple = (municipality.id, criteria.id)
+            municipality_score = matching_scores_map.get(score_tuple)
+            if municipality_score is None:
+                municipality_score = base_scores_map.get(score_tuple, 1.0)
 
             total_weighted_score += municipality_score * weight
             total_weight += weight
 
             criteria_details.append({
-                'criteria_name': preference_data['criteria_name'],
-                'priority': preference_data['priority'],
+                'criteria_name': criteria.name,
+                'priority': rank,
                 'weight': weight,
                 'municipality_score': municipality_score,
                 'weighted_score': municipality_score * weight
             })
 
-        # Calculate final matching score
         matching_score = total_weighted_score / total_weight if total_weight > 0 else 0
-
         matching_results.append({
             'municipality': municipality,
             'score': round(matching_score, 2),
@@ -334,7 +354,6 @@ def calculate_municipality_matching_scores(user_preferences, country):
         })
 
     return matching_results
-
 
 def get_municipality_matching_details(request, user_info_id, municipality_id):
     """API endpoint to get detailed matching information for a specific municipality"""
@@ -392,3 +411,41 @@ def get_municipality_matching_details(request, user_info_id, municipality_id):
         'municipality_name': municipality.name,
         'details': details
     })
+
+
+#-----------TEST VIEWS FOR INFO SURVEY-----------------
+def match_info_view(request):
+    if request.method == 'POST':
+        form = MatchInfoForm(request.POST)
+        if form.is_valid():
+            user_info = form.save()
+            # Chuyển hướng đến survey của match
+            return redirect('matching_survey', user_info_id=user_info.id)
+    else:
+        form = MatchInfoForm()
+    return render(request, 'match_info.html', {'form': form})
+
+
+def evaluate_info_view(request):
+    if request.method == 'POST':
+        form = EvaluateInfoForm(request.POST)
+        if form.is_valid():
+            user_info = form.save()
+            # Chuyển hướng đến survey của evaluate
+            return redirect('evaluation_survey', user_info_id=user_info.id)
+    else:
+        form = EvaluateInfoForm()
+    return render(request, 'evaluate_info.html', {'form': form})
+
+
+def get_municipalities(request):
+    prefecture_id = request.GET.get('prefecture_id')
+    if not prefecture_id:
+        return JsonResponse([], safe=False)
+
+    try:
+        prefecture = get_object_or_404(Prefecture, id=prefecture_id)
+        municipalities = Municipality.objects.filter(prefecture=prefecture).values('id', 'name')
+        return JsonResponse(list(municipalities), safe=False)
+    except (ValueError, TypeError):
+        return JsonResponse([], safe=False)
