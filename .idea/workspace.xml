@@ -6,9 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="7689cca7-c115-4256-87af-03c6eb58bd85" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/chamu/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/chamu/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/evaluation_survey.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/evaluation_survey.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/evaluate_info.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/evaluate_info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/match_info.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/match_info.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
