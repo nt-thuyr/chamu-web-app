@@ -89,7 +89,7 @@
         <!-- Modal Login -->
         <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
           <div class="modal-dialog">
-            <form id="login-form" class="modal-content">
+            <form id="login-form" class="modal-content modal-auth-form">
               <div class="modal-header">
                 <h5 class="modal-title" id="loginModalLabel">{% trans "Log in" %}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
@@ -114,7 +114,7 @@
     <!-- Modal Sign up -->
     <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
       <div class="modal-dialog">
-        <form id="signup-form" class="modal-content">
+        <form id="signup-form" class="modal-content modal-auth-form">
           <div class="modal-header">
             <h5 class="modal-title" id="signupModalLabel">{% trans "Sign up" %}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
@@ -150,14 +150,19 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
           </div>
           <div class="modal-body">
+              <div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
+                <span>Submit is only allowed when all 3 fields are filled in.</span>
+                <button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
             <div id="update-error-list" class="alert alert-danger py-2" style="display:none"></div>
             <div class="mb-3">
               <label for="update-username" class="form-label">{% trans "Username" %}</label>
-              <input type="text" class="form-control" id="update-username" name="username" required>
+              <input type="text" class="form-control" id="update-username" name="username" required >
             </div>
             <div class="mb-3">
               <label for="update-password" class="form-label">{% trans "Password" %}</label>
               <input type="password" class="form-control" id="update-password" name="password" required>
+              <div class="form-text text-muted">{% trans "Your password must have at least 6 characters" %}</div>
             </div>
             <div class="mb-3">
               <label for="update-password2" class="form-label">{% trans "Retype Password" %}</label>
@@ -195,6 +200,12 @@ $.ajaxSetup({
         }
     }
 });
+const updateHintHtml = `
+<div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
+<span>Submit is only allowed when all 3 fields are filled in.</span>
+<button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+`;
     $(function() {
         // Hiện modal login khi nhấn nút Login
         $('#login-btn').on('click', function() {
@@ -269,7 +280,17 @@ $.ajaxSetup({
             $('#update-password').val('');
             $('#update-password2').val('');
             $('#update-submit-btn').prop('disabled', true);
+
+            // Gắn lại chú thích vào đầu modal-body
+            $('#update-hint').remove();
+$           ('.modal-body', '#update-form').prepend(updateHintHtml);
+
             $('#updateModal').modal('show');
+        });
+
+        // Đăng ký lại sự kiện tắt chú thích
+        $(document).on('click', '#hide-update-hint', function() {
+            $('#update-hint').remove();
         });
 
         // Kiểm tra đủ 3 trường mới enable submit cho update
@@ -287,37 +308,48 @@ $.ajaxSetup({
 
         // Submit update AJAX
         $('#update-form').on('submit', function(e) {
-            e.preventDefault();
-            var username = $('#update-username').val().trim();
-            var password = $('#update-password').val();
-            var password2 = $('#update-password2').val();
-            // Kiểm tra password2 phía client
-            if(password !== password2){
-                $('#update-error-list').html('<ul class="mb-0"><li>Passwords do not match.</li></ul>').show();
-                return;
-            }
-            $.ajax({
-                url: '{% url "ajax_update" %}',
-                method: 'POST',
-                data: {
-                    username: username,
-                    password: password,
-                    password2: password2
-                },
-                success: function(data) {
-                    if (data.success) {
-                        $('#updateModal').modal('hide');
-                    } else if (data.errors) {
-                        let html = '<ul class="mb-0">';
-                        data.errors.forEach(function(err) {
-                            html += '<li>' + err + '</li>';
-                        });
-                        html += '</ul>';
-                        $('#update-error-list').html(html).show();
-                    }
-                }
+        e.preventDefault();
+        var username = $('#update-username').val().trim();
+        var password = $('#update-password').val();
+        var password2 = $('#update-password2').val();
+
+        let errorList = [];
+        if(!username || !password || !password2) {
+            errorList.push("Please fill in all fields.");
+        }
+        if(errorList.length) {
+            let html = '<ul class="mb-0">';
+            errorList.forEach(function(err) {
+                html += '<li>' + err + '</li>';
             });
+            html += '</ul>';
+            $('#update-error-list').html(html).show();
+            return;
+        }
+
+        // Gửi lên server để nhận về list lỗi đầy đủ
+        $.ajax({
+            url: '{% url "ajax_update" %}',
+            method: 'POST',
+            data: {
+                username: username,
+                password: password,
+                password2: password2
+            },
+            success: function(data) {
+                if (data.success) {
+                    $('#updateModal').modal('hide');
+                } else if (data.errors) {
+                    let html = '<ul class="mb-0">';
+                    data.errors.forEach(function(err) {
+                        html += '<li>' + err + '</li>';
+                    });
+                    html += '</ul>';
+                    $('#update-error-list').html(html).show();
+                }
+            }
         });
+    });
 
         // Logout AJAX
         $('#logout-btn').on('click', function() {

@@ -1,20 +1,17 @@
 from django import forms
 from django.db.models import Avg
-from django.forms import formset_factory
+from django.forms import formset_factory, ChoiceField
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.views.decorators.csrf import csrf_exempt
-import json
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from .forms import (
-    UserInfoForm, CriteriaPriorityForm,
+    UserInfoForm,
 )
 from .models import (
-    Criteria, UserInfo, Municipality, Country,
+    Criteria, UserInfo, Municipality,
     MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey
 )
 
@@ -22,7 +19,12 @@ from .models import (
 # Views
 # -----------------
 def homepage(request):
-    country_choices = UserInfoForm.base_fields['country'].choices
+    country_field = UserInfoForm.base_fields['country']
+    if isinstance(country_field, ChoiceField):
+        country_choices = country_field.choices
+    else:
+        # Xử lý trường hợp không phải là ChoiceField nếu cần
+        country_choices = []
     municipality_choices = Municipality.objects.all()
     userinfo = None
     if request.user.is_authenticated:
@@ -91,36 +93,38 @@ def ajax_update(request):
         new_password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
         errors = []
-        changed = False
 
-        # Bắt buộc nhập đủ
+        # 1. Kiểm tra đủ trường
         if not new_username or not new_password or not password2:
             errors.append("Please fill in all fields.")
 
-        # Kiểm tra nhập lại mật khẩu
-        if new_password != password2:
-            errors.append("Passwords do not match.")
-
-        # Kiểm tra username
+        # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
         if new_username != user.username:
             if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
                 errors.append("Username already exists.")
-            elif len(new_username) < 1:
+            if len(new_username) < 1:
                 errors.append("Username cannot be empty.")
-            else:
-                user.username = new_username
-                changed = True
 
-        # Kiểm tra password
-        if new_password and not check_password(new_password, user.password):
-            if len(new_password) < 6:
-                errors.append("Password must be at least 6 characters.")
-            else:
-                user.set_password(new_password)
-                changed = True
+        # 3. Kiểm tra password
+        if len(new_password) < 6:
+            errors.append("Your password must have at least 6 characters.")
 
+        # 4. Kiểm tra nhập lại mật khẩu
+        if new_password != password2:
+            errors.append("Passwords do not match.")
+
+        # 5. Nếu có lỗi thì trả về luôn
         if errors:
             return JsonResponse({"success": False, "errors": errors})
+
+        # 6. Update nếu hợp lệ
+        changed = False
+        if new_username != user.username:
+            user.username = new_username
+            changed = True
+        if new_password and not check_password(new_password, user.password):
+            user.set_password(new_password)
+            changed = True
 
         if changed:
             user.save()
@@ -216,7 +220,6 @@ def matching_survey_view(request, user_info_id):
         # Lưu kết quả vào session
         request.session[f'preferences_{user_info_id}'] = selected_criteria
         return redirect('matching_results', user_info_id=user_info.id)
-
     return render(request, 'matching_survey.html', {
         'criteria_list': criteria_list,
         'ranks': ranks,
