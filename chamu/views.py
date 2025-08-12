@@ -3,10 +3,12 @@ from django.db.models import Avg
 from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 from .forms import (
-    UserInfoForm, CriteriaPriorityForm,
+    UserInfoForm,
 )
 from .models import (
     Criteria, UserInfo, Municipality,
@@ -25,48 +27,83 @@ def homepage(request):
             userinfo = UserInfo.objects.get(user=request.user)
         except UserInfo.DoesNotExist:
             userinfo = None
-
-    if request.method == 'POST':
-        next_action = request.POST.get('next_action')
-        name = request.POST.get('name')
-        country = request.POST.get('country')
-        municipality = request.POST.get('municipality')
-        # Lưu hoặc update userinfo
-        if request.user.is_authenticated:
-            userinfo, created = UserInfo.objects.update_or_create(
-                user=request.user,
-                defaults={
-                    'name': name,
-                    'country': country,
-                    'municipality_id': municipality
-                }
-            )
-        else:
-            userinfo = UserInfo.objects.create(
-                name=name,
-                country=country,
-                municipality_id=municipality
-            )
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            if next_action == 'match':
-                return JsonResponse({'success': True, 'redirect_url': reverse('matching_survey', args=[userinfo.id])})
-            elif next_action == 'evaluate':
-                return JsonResponse({'success': True, 'redirect_url': reverse('evaluation_survey', args=[userinfo.id])})
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid choice'})
-        else:
-            if next_action == 'match':
-                return redirect('matching_survey', user_info_id=userinfo.id)
-            elif next_action == 'evaluate':
-                return redirect('evaluation_survey', user_info_id=userinfo.id)
-            else:
-                return HttpResponse("Invalid choice.")
     context = {
         'country_choices': country_choices,
         'municipality_choices': municipality_choices,
-        'userinfo': userinfo
+        'userinfo': userinfo,
     }
-    return render(request, 'homepage.html', context)
+    return render(request, "homepage.html", context)
+
+def ajax_login(request):
+    if request.method == "POST":
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+             # Xác thực người dùng
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"success": False, "error": "Tên đăng nhập hoặc mật khẩu không đúng."})
+    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
+
+def ajax_logout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return JsonResponse({"success": True})
+
+def ajax_signup(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        password2 = request.POST.get("password2")
+        # Kiểm tra username trùng
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
+        # Kiểm tra mật khẩu nhập lại
+        if password != password2:
+            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
+        # Kiểm tra độ dài mật khẩu
+        if len(password) < 6:
+            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
+        # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
+
+        user = User.objects.create_user(username=username, password=password)
+        user.save()
+        # Đăng nhập luôn
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
+
+@login_required
+def ajax_update(request):
+    if request.method == "POST":
+        current_password = request.POST.get("current_password")
+        new_username = request.POST.get("username")
+        new_password = request.POST.get("password")
+
+        user = authenticate(request, username=request.user.username, password=current_password)
+        if not user:
+            return JsonResponse({"success": False, "error": "Current password is incorrect"})
+
+        if new_username:
+            user.username = new_username
+        if new_password:
+            user.set_password(new_password)
+        user.save()
+
+        # Login lại nếu đổi password
+        if new_password:
+            user = authenticate(request, username=user.username, password=new_password)
+            if user:
+                login(request, user)
+
+        return JsonResponse({"success": True, "username": user.username})
+    return None
+
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
@@ -185,26 +222,6 @@ def matching_results_view(request, user_info_id):
 # -----------------
 # Functions
 # -----------------
-def normalize_score(raw_value, min_value, max_value):
-    if max_value == min_value:
-        return 1  # Avoid division by zero
-
-    score = (raw_value - min_value) / (max_value - min_value) * 4 + 1
-    return max(1, min(5, round(score, 1)))
-
-
-def update_municipality_base_score(municipality, criteria, country, raw_data):
-    min_value = 0
-    max_value = 10
-    normalized_score = normalize_score(raw_data, min_value, max_value)
-    MunicipalityBaseScore.objects.update_or_create(
-        municipality=municipality,
-        criteria=criteria,
-        country=country,
-        defaults={'base_score': normalized_score}
-    )
-
-
 def update_municipality_avg_score(municipality, country):
     """Update average scores from user evaluations"""
     criteria_list = Criteria.objects.all()
@@ -251,15 +268,15 @@ def update_municipality_final_score(municipality, country):
 
 def calculate_municipality_matching_scores(user_preferences, country):
     """
-    Calculate matching scores for all municipalitys based on user preferences
+    Calculate matching scores for all municipalities based on user preferences
     Formula: (D1×P1 + D2×P2 + ...) / (P1 + P2 + ...)
     Where D = Data (municipality score), P = Preference weight
     """
-    municipalitys = Municipality.objects.all()
+    municipalities = Municipality.objects.all()
 
     matching_results = []
 
-    for municipality in municipalitys:
+    for municipality in municipalities:
         total_weighted_score = 0
         total_weight = 0
         criteria_details = []
