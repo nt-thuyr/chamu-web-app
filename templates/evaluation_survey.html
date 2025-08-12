@@ -5,36 +5,96 @@
 
 {% block content %}
 <h2>Rate your municipality</h2>
+
 <form method="post">
     {% csrf_token %}
     {{ formset.management_form }}
+
     <table class="table align-middle">
         <thead>
             <tr>
                 <th>Criteria</th>
-                <th style="text-align:left;"></th>
-                <th colspan="5" style="text-align:center;">How do you think?</th>
-                <th style="text-align:right;"></th>
+                <th colspan="5">How do you think?</th>
             </tr>
         </thead>
         <tbody>
         {% for form, criteria in form_criteria %}
             <tr>
-                <td>{{ criteria.name }}</td>
-                <td style="text-align:left;">{{ criteria.left_label }}</td>
-                <td colspan="5" style="text-align:center;">
-                    <div class="d-flex justify-content-center gap-2">
-                        {% for i in "12345" %}
-                            <input type="radio" name="{{ form.prefix }}-score" value="{{ forloop.counter }}" id="{{ form.prefix }}-score-{{ forloop.counter }}">
-                            <label for="{{ form.prefix }}-score-{{ forloop.counter }}">{{ forloop.counter }}</label>
-                        {% endfor %}
+            
+                <td class="question-text">{{ criteria.name }}</td>
+
+                <td colspan="5">
+                    <div class="rating-row">
+                        <span class="left-label">{{ criteria.left_label }}</span>
+                        <div class="rating-options">
+                            {% for i in "12345" %}
+                                <input type="radio" 
+                                       name="{{ form.prefix }}-score" 
+                                       value="{{ forloop.counter }}" 
+                                       id="{{ form.prefix }}-score-{{ forloop.counter }}">
+                                <label for="{{ form.prefix }}-score-{{ forloop.counter }}">{{ forloop.counter }}</label>
+                            {% endfor %}
+                        </div>
+                        <span class="right-label">{{ criteria.right_label }}</span>
                     </div>
                 </td>
-                <td style="text-align:right;">{{ criteria.right_label }}</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+
     <button type="submit" class="btn btn-success">Submit</button>
 </form>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const labels = document.querySelectorAll('.rating-options label');
+    const inputs = document.querySelectorAll('.rating-options input');
+
+    // ★ マウスオーバーでプレビュー
+    labels.forEach(label => {
+        label.addEventListener('mouseenter', e => {
+            const currentNum = parseInt(e.target.textContent);
+            const siblings = e.target.parentNode.querySelectorAll('label');
+            siblings.forEach(l => {
+                if (parseInt(l.textContent) <= currentNum) {
+                    l.style.background = '#ffe066';
+                }
+            });
+        });
+
+        label.addEventListener('mouseleave', e => {
+            const siblings = e.target.parentNode.querySelectorAll('label');
+            siblings.forEach(l => l.style.background = '');
+        });
+    });
+
+    // ★ クリック時アニメ & リアルタイム表示
+    inputs.forEach(input => {
+        input.addEventListener('change', e => {
+            // クリックアニメ
+            const label = document.querySelector(`label[for="${e.target.id}"]`);
+            label.classList.add('clicked');
+            setTimeout(() => label.classList.remove('clicked'), 300);
+
+            // 選択内容表示
+            let criteriaName = e.target.closest('.question-block').querySelector('.question-text').textContent;
+            let selectedValue = e.target.value;
+
+            let resultArea = document.getElementById('result-display');
+            if (!resultArea) {
+                resultArea = document.createElement('div');
+                resultArea.id = 'result-display';
+                resultArea.style.marginTop = '30px';
+                resultArea.style.fontWeight = 'bold';
+                resultArea.style.textAlign = 'center';
+                resultArea.style.fontSize = '1.2rem';
+                document.querySelector('form').appendChild(resultArea);
+            }
+            resultArea.textContent = `${criteriaName}: You selected ${selectedValue}`;
+        });
+    });
+});
+</script>
+

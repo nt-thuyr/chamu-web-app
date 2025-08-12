@@ -6,8 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}DOKO{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'chamu/style.css' %}">
+    <!-- Stylesheet CSS -->
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libertinus+Serif:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'chamu/style.css' %}?v=1.0">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -20,24 +24,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <button id="logout-btn" class="btn btn-danger">{% trans "Logout" %}</button>
-                        </li>
-                    {% else %}
-                        {% if request.resolver_match.url_name == "homepage" %}
-                            <li class="nav-item">
-                                <button id="login-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
-                                    {% trans "Log in" %}
-                                </button>
-                            </li>
-                             <li class="nav-item">
-                                <button id="signup-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#signupModal">
-                                    {% trans "Sign up" %}
-                                </button>
-                            </li>
-                        {% endif %}
-                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">{% trans "Home" %}</a>
+                    </li>
                     <!-- Example future language switcher -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
@@ -53,6 +42,8 @@
             </div>
         </div>
     </nav>
+    
+
     <!-- Flash Messages -->
     <div class="container">
         {% if messages %}
@@ -81,155 +72,6 @@
     </footer>
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        {% block extra_js %}{% endblock %}
-        <!-- Modal Login -->
-        <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <form id="login-form" class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="loginModalLabel">{% trans "Log in" %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
-              </div>
-              <div class="modal-body">
-                <div id="login-error" class="text-danger mb-2" style="display:none"></div>
-                <div class="mb-3">
-                  <label for="login-username" class="form-label">{% trans "Username" %}</label>
-                  <input type="text" class="form-control" id="login-username" name="username" required>
-                </div>
-                <div class="mb-3">
-                  <label for="login-password" class="form-label">{% trans "Password" %}</label>
-                  <input type="password" class="form-control" id="login-password" name="password" required>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-    <!-- Modal Sign up -->
-    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form id="signup-form" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="signupModalLabel">{% trans "Sign up" %}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
-          </div>
-          <div class="modal-body">
-            <div id="signup-error" class="text-danger mb-2" style="display:none"></div>
-            <div class="mb-3">
-              <label for="signup-username" class="form-label">{% trans "Username" %}</label>
-              <input type="text" class="form-control" id="signup-username" name="username" required>
-            </div>
-            <div class="mb-3">
-              <label for="signup-password" class="form-label">{% trans "Password" %}</label>
-              <input type="password" class="form-control" id="signup-password" name="password" required>
-            </div>
-            <div class="mb-3">
-              <label for="signup-password2" class="form-label">{% trans "Retype Password" %}</label>
-              <input type="password" class="form-control" id="signup-password2" name="password2" required>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">{% trans "Register" %}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script>
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-return cookieValue;
-}
-const csrftoken = getCookie('csrftoken');
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-        }
-    }
-});
-$(function() {
-    // Hiện modal login khi nhấn nút Login
-    $('#login-btn').on('click', function() {
-        $('#login-error').hide();
-        $('#login-form')[0].reset();
-    });
-
-    // Hiện modal signup khi nhấn nút Sign up
-    $('#signup-btn').on('click', function() {
-        $('#signup-error').hide();
-        $('#signup-form')[0].reset();
-    });
-
-    // Submit login AJAX
-    $('#login-form').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: '{% url "ajax_login" %}',
-            method: 'POST',
-            data: {
-                username: $('#login-username').val(),
-                password: $('#login-password').val()
-            },
-            success: function(data) {
-                if (data.success) {
-                    $('#loginModal').modal('hide');
-                    location.reload();
-                } else {
-                    $('#login-error').text(data.error).show();
-                }
-            }
-        });
-    });
-
-    // Submit signup AJAX
-    $('#signup-form').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: '{% url "ajax_signup" %}',
-            method: 'POST',
-            data: {
-                 username: $('#signup-username').val(),
-                 password: $('#signup-password').val(),
-                 password2: $('#signup-password2').val()
-            },
-            success: function(data) {
-                if (data.success) {
-                    $('#signupModal').modal('hide');
-                    location.reload();
-                } else {
-                    $('#signup-error').text(data.error).show();
-                }
-            }
-        });
-    });
-
-    // Logout AJAX
-    $('#logout-btn').on('click', function() {
-        $.ajax({
-            url: '{% url "ajax_logout" %}',
-            method: 'POST',
-            data: {},
-            success: function(data) {
-                if (data.success) {
-                    location.reload();
-                }
-            }
-        });
-    });
-});
-</script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
