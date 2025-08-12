@@ -5,21 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7689cca7-c115-4256-87af-03c6eb58bd85" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/management/commands/import_country.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/management/commands/import_criteria.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/management/commands/import_location.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/management/commands/import_score.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/migrations/0002_alter_municipalitybasescore_unique_together.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/migrations/0003_criteria_is_reverse.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/chamu/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chamu/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chamu/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chamu/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chamu/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chamu/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chamu/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/chamu/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map_web/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/map_web/urls.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,31 +54,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "Django Server.chamu-web-app.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "database.data.extractors.current.export.id": "Comma-separated (CSV)_id",
-    "database.data.extractors.current.id": "Comma-separated (CSV)_id",
-    "django.template.preview.state": "SHOW_EDITOR_AND_PREVIEW",
-    "git-widget-placeholder": "views",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/thuyr/Documents/GitHub/chamu-web-app/chamu",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Django Server.chamu-web-app.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR_AND_PREVIEW&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;views&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/thuyr/Documents/GitHub/chamu-web-app/chamu&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\thuyr\Documents\GitHub\chamu-web-app\chamu" />
