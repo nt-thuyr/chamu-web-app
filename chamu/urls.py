@@ -12,7 +12,8 @@ urlpatterns = [
     path('match-info/', views.match_info_view, name='match_info'),
     path('evaluate-info/', views.evaluate_info_view, name='evaluate_info'),
     # Các URL cho survey
-    path('survey/<int:user_info_id>/match/', views.matching_survey_view, name='matching_survey'),
+    path('survey/<int:user_info_id>/<int:target_prefecture_id>/match/', views.matching_survey_view, name='matching_survey'),
     path('survey/<int:user_info_id>/evaluate/', views.evaluation_survey_view, name='evaluation_survey'),
-    path('survey/<int:user_info_id>/match/result', views.matching_results_view, name='matching_results'),
+    path('survey/<int:user_info_id>/<int:target_prefecture_id>/match/result', views.matching_results_view, name='matching_results'),
+    path('municipality/<int:municipality_id>/', views.municipality_details_view, name='municipality_details')
 ]

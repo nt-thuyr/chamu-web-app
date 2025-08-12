@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Chi tiết Thành phố" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="text-center mb-4">{{ municipality.name }}</h1>
+            <p class="text-center text-muted">
+                {% trans "Thuộc tỉnh" %}: {{ prefecture.name }}
+            </p>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    {% trans "Thông tin cơ bản" %}
+                </div>
+                <div class="card-body">
+                    <p><strong>ID:</strong> {{ municipality.id }}</p>
+                    <p><strong>{% trans "Mô tả" %}:</strong> {% trans "Thông tin chi tiết về thành phố sẽ được thêm vào đây." %}</p>
+                    </div>
+            </div>
+
+            <div class="text-center mt-4">
+                {% if user_info_id %}
+                    <a href="{% url 'matching_results' user_info_id=user_info_id target_prefecture_id=prefecture.id %}" class="btn btn-secondary">
+                        {% trans "Quay lại kết quả xếp hạng" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

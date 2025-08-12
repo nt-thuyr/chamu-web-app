@@ -1,13 +1,15 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Kết quả Xếp hạng Thành phố Phù hợp</h2>
-    <p>Dựa trên sở thích của bạn, đây là các thành phố được xếp hạng:</p>
+    <h1 class="text-center mb-4">{{ target_prefecture.name }}</h1>
+    <h2 class="text-center mb-4">{% trans "Kết quả Xếp hạng Thành phố Phù hợp" %}</h2>
+    <p>{% trans "Dựa trên sở thích của bạn, đây là các thành phố được xếp hạng:" %}</p>
 
     <div class="card mb-4">
         <div class="card-header">
-            Sở thích của bạn (ưu tiên 1 là cao nhất)
+            {% trans "Sở thích của bạn (ưu tiên 1 là cao nhất)" %}
         </div>
         <ul class="list-group list-group-flush">
             {% for item in user_preferences %}
@@ -23,30 +25,39 @@
         <thead class="table-dark">
             <tr>
                 <th scope="col">#</th>
-                <th scope="col">Thành phố</th>
-                <th scope="col">Điểm phù hợp</th>
-                <th scope="col">Chi tiết</th>
+                <th scope="col">{% trans "Thành phố" %}</th>
+                <th scope="col">{% trans "Điểm phù hợp" %}</th>
+                <th scope="col">{% trans "Chi tiết" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for result in matching_results %}
-            <tr data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" aria-expanded="false" aria-controls="details-{{ forloop.counter }}">
-                <th scope="row">{{ forloop.counter }}</th>
-                <td>{{ result.municipality.name }}</td>
-                <td>{{ result.score }}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-info">Xem chi tiết</button>
-                </td>
-            </tr>
+                <tr >
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>
+                        <a href="{% url 'municipality_details' municipality_id=result.municipality.id %}">
+                            {{ result.municipality.name }}
+                        </a>
+                    </td>
+                    <td>
+                        <strong>{{ result.percentage }}%</strong>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" aria-expanded="false" aria-controls="details-{{ forloop.counter }}">{% trans "Xem chi tiết" %}</button>
+                    </td>
+                </tr>
             <tr class="collapse" id="details-{{ forloop.counter }}">
                 <td colspan="4">
                     <div class="p-3 bg-light">
-                        <h6>Điểm chi tiết theo tiêu chí:</h6>
+                        <p class="text-muted">
+                            {% trans "Lưu ý: Điểm số 1.0 là phù hợp nhất, 5.0 là ít phù hợp nhất." %}
+                        </p>
+                        <h6>{% trans "Điểm chi tiết theo tiêu chí:" %}</h6>
                         <ul class="list-unstyled">
                             {% for detail in result.criteria_details %}
                                 <li>
-                                    <strong>{{ detail.criteria_name }} (Ưu tiên {{ detail.priority }}):</strong> 
-                                    Điểm thành phố: {{ detail.municipality_score|floatformat:2 }}
+                                    <strong>{{ detail.criteria_name }} (Ưu tiên {{ detail.priority }}):</strong>
+                                    {% trans "Điểm thành phố" %}: {{ detail.municipality_score|floatformat:2 }}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -55,7 +66,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4" class="text-center">Không có kết quả nào được tìm thấy.</td>
+                <td colspan="4" class="text-center">{% trans "Không có kết quả nào được tìm thấy." %}</td>
             </tr>
             {% endfor %}
         </tbody>
