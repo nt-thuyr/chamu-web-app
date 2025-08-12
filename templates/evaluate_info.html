@@ -29,14 +29,14 @@
 
                         <p class="fw-bold text-muted">{% trans "Please provide your current municipality." %}</p>
                         <div class="mb-3">
-                            <label for="{{ form.target_prefecture.id_for_label }}" class="form-label">{{ form.target_prefecture.label }}</label>
-                            {{ form.target_prefecture }}
-                            {{ form.target_prefecture.errors }}
+                            <label for="{{ form.current_prefecture.id_for_label }}" class="form-label">{{ form.current_prefecture.label }}</label>
+                            {{ form.current_prefecture }}
+                            {{ form.current_prefecture.errors }}
                         </div>
                         <div class="mb-3">
-                            <label for="{{ form.target_municipality.id_for_label }}" class="form-label">{{ form.target_municipality.label }}</label>
-                            {{ form.target_municipality }}
-                            {{ form.target_municipality.errors }}
+                            <label for="{{ form.current_municipality.id_for_label }}" class="form-label">{{ form.current_municipality.label }}</label>
+                            {{ form.current_municipality }}
+                            {{ form.current_municipality.errors }}
                         </div>
 
                         <div class="d-grid mt-4">
@@ -53,6 +53,7 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Hãy đảm bảo rằng các ID trong JavaScript khớp với ID của form
         const nameInput = document.getElementById('id_name');
         const countrySelect = document.getElementById('id_country');
         const prefectureSelect = document.getElementById('id_current_prefecture');

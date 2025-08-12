@@ -429,7 +429,7 @@ def match_info_view(request):
             # Ví dụ: truyền nó vào một session hoặc redirect đến trang khảo sát
             print(f"Target prefecture đã được chọn: {target_prefecture.name}")
 
-            return redirect('matching_survey_view', user_info_id=user_info.id)
+            return redirect('matching_survey', user_info_id=user_info.id)
         else:
             return render(request, 'match_info.html', {'form': form})
     else:
