@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.homepage, name='homepage'),
+    path('api/municipalities/', views.get_municipalities, name='get_municipalities'),
+    path('api/prefectures/', views.get_prefectures, name='get_prefectures'),
     path('ajax/login/', views.ajax_login, name='ajax_login'),
     path('ajax/signup/', views.ajax_signup, name='ajax_signup'),
     path('ajax/update/', views.ajax_update, name='ajax_update'),
