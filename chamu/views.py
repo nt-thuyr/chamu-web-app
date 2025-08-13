@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password
 import wikipedia, folium
 from .forms import (
     BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
@@ -49,9 +50,12 @@ def ajax_login(request):
     return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
 
 def ajax_logout(request):
-    if request.user.is_authenticated:
-        logout(request)
-    return JsonResponse({"success": True})
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            logout(request)
+        return JsonResponse({"success": True})
+    else:
+        return JsonResponse({"success": False}, status=405)
 
 def ajax_signup(request):
     if request.method == "POST":

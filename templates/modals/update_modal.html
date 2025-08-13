@@ -27,6 +27,18 @@
           <label for="update-password2" class="form-label">{% trans "Retype Password" %}</label>
           <input type="password" class="form-control" id="update-password2" name="password2" required>
         </div>
+        <div class="mb-3">
+          <label for="update-prefecture" class="form-label">Prefecture</label>
+          <select class="form-control" id="update-prefecture" name="prefecture" required disabled>
+            <option value="">Select prefecture</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="update-municipality" class="form-label">Municipality</label>
+          <select class="form-control" id="update-municipality" name="municipality" required disabled>
+            <option value="">Select municipality</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
@@ -38,7 +50,67 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-$(function() {
+
+    $(function() {
+
+    const updateHintHtml = `
+<div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
+<span>Submit is only allowed when all 3 fields are filled in.</span>
+<button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+`;
+        function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        // Load prefectures vào select update-prefecture
+        function loadUpdatePrefectures(selectedId) {
+            $.get('/api/prefectures/', function(data){
+                const $pref = $('#update-prefecture');
+                $pref.empty().append('<option value="">Select prefecture</option>');
+                data.forEach(function(p){
+                    $pref.append('<option value="'+p.id+'">'+p.name+'</option>');
+                });
+                $pref.prop('disabled', false);
+                if (selectedId) $pref.val(selectedId);
+            });
+        }
+
+        // Load municipalities khi chọn prefecture
+        function loadUpdateMunicipalities(prefectureId, selectedId) {
+            const $muni = $('#update-municipality');
+            $muni.empty().append('<option value="">Select municipality</option>').prop('disabled', true);
+            if (prefectureId) {
+                $.get('/api/municipalities/', {prefecture_id: prefectureId}, function(data){
+                    data.forEach(function(m){
+                        $muni.append('<option value="'+m.id+'">'+m.name+'</option>');
+                    });
+                    $muni.prop('disabled', false);
+                    if (selectedId) $muni.val(selectedId);
+                });
+            }
+        }
+
         // Hiện modal update khi nhấn nút Update
         $('#update-btn').on('click', function() {
             $('#update-error-list').hide().empty();
