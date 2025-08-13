@@ -2,13 +2,50 @@ body {
     font-family: "Libertinus Serif", serif;
     font-weight: 400;
     font-style: normal;
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+  background-color: #96c2fd !important;
+}
+
+footer {
+    padding-top: 80px;
 }
 
 label,
 .navbar-brand {
-    font-family: "Libertinus Serif", serif;
     font-weight: 700;
 }
+
+
+.btn-outline-primary {
+    margin-top: 40px;
+    display: flex;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 10px; 
+  padding: 10px 40px;
+  white-space: pre-wrap;
+  border-radius: 50% 20% / 10% 40%;
+  color: #fff;
+  border: 2px solid #909eac;
+  background-color: #4e4e4e;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+}
+
+
+.btn-outline-primary:hover {
+  background-color: #89beff; 
+  border-color: #78b5ff;
+  color: #fff;
+  transform: translateY(-3px); 
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); 
+}
+
 
 input[type="radio"] {
     display: none;
@@ -47,6 +84,13 @@ label:hover {
     border-color: #dcdcdc;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
     transform: translateY(-2px); 
+}
+
+.btn-outline-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2); /* 影を小さくして凹んだように見せる */
+  background-color: #5a6268; /* 背景色をさらに暗く */
+  border-color: #5a6268;
 }
 
 input[type="radio"]:checked + label {
