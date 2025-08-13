@@ -544,5 +544,6 @@ def get_municipalities(request):
     except (ValueError, TypeError):
         return JsonResponse([], safe=False)
 def get_prefectures(request):
-    prefectures = Prefecture.objects.all().values('id', 'name')
-    return JsonResponse(list(prefectures), safe=False)
+    prefectures = Prefecture.objects.all().order_by('name')
+    data = [{'id': p.id, 'name': p.name} for p in prefectures]
+    return JsonResponse(data, safe=False)

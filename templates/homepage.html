@@ -1,7 +1,24 @@
 {% extends 'base.html' %}
 {% load i18n %}
-
 {% block title %}Home{% endblock %}
+
+{% block homepage_auth_buttons %}
+    {% if user.is_authenticated %}
+        <li class="nav-item">
+            <button id="update-btn" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#updateModal">{% trans "Update" %}</button>
+        </li>
+        <li class="nav-item">
+            <button id="logout-btn" class="btn btn-danger">{% trans "Logout" %}</button>
+        </li>
+    {% else %}
+        <li class="nav-item">
+            <button id="login-btn" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#loginModal">{% trans "Log in" %}</button>
+        </li>
+        <li class="nav-item">
+            <button id="signup-btn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#signupModal">{% trans "Sign up" %}</button>
+        </li>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -10,7 +27,6 @@
         <form id="main-info-form" method="post" novalidate>
             {% csrf_token %}
             {{ formset.management_form }}
-            <!-- Hidden field to track next_action -->
             <input type="hidden" name="next_action" id="next_action_input" value="">
             {{ form.as_p }}
             <div class="d-grid gap-2 col-6 mx-auto">
@@ -20,21 +36,67 @@
         </form>
     </div>
 </div>
+<!-- Modals only show on homepage -->
+{% include "modals/login_modal.html" %}
+{% include "modals/signup_modal.html" %}
+{% include "modals/update_modal.html" %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Sử dụng Django template tags để tạo URL động
         const matchInfoUrl = "{% url 'match_info' %}";
         const evaluateInfoUrl = "{% url 'evaluate_info' %}";
-
         document.getElementById("start-matching-btn").onclick = function() {
             window.location.href = matchInfoUrl;
         };
         document.getElementById("start-evaluation-btn").onclick = function() {
             window.location.href = evaluateInfoUrl;
         };
+    });
+
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+const updateHintHtml = `
+<div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
+<span>Submit is only allowed when all 3 fields are filled in.</span>
+<button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+`;
+    $(function() {
+        // Logout AJAX
+        $('#logout-btn').on('click', function() {
+            $.ajax({
+                url: '{% url "ajax_logout" %}',
+                method: 'POST',
+                data: {},
+                success: function(data) {
+                    if (data.success) {
+                        location.reload();
+                    }
+                }
+            });
+        });
     });
 </script>
 {% endblock %}
