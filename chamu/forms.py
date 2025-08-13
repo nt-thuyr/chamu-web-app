@@ -10,7 +10,7 @@ class BaseUserInfoForm(forms.ModelForm):
         required=False,
         label='Prefecture you currently live in'
     )
-    current_municipality = forms.ModelChoiceField(
+    municipality = forms.ModelChoiceField(
         queryset=Municipality.objects.none(),
         required=False,
         label='Municipality you currently live in'
@@ -23,7 +23,7 @@ class BaseUserInfoForm(forms.ModelForm):
 
     class Meta:
         model = UserInfo
-        fields = ['name', 'country', 'current_prefecture', 'current_municipality']
+        fields = ['name', 'country', 'current_prefecture', 'municipality']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -41,14 +41,14 @@ class EvaluateInfoForm(BaseUserInfoForm):
 
         # Đặt lại required=True cho các trường
         self.fields['current_prefecture'].required = True
-        self.fields['current_municipality'].required = True
+        self.fields['municipality'].required = True
 
         # Lấy prefecture_id từ dữ liệu POST, nếu có
         prefecture_id = self.data.get('current_prefecture')
         if prefecture_id:
             try:
                 # Cập nhật queryset cho municipality
-                self.fields['current_municipality'].queryset = Municipality.objects.filter(prefecture_id=prefecture_id) # type: ignore
+                self.fields['municipality'].queryset = Municipality.objects.filter(prefecture_id=prefecture_id) # type: ignore
             except (ValueError, TypeError):
                 # Xử lý trường hợp prefecture_id không hợp lệ
                 pass

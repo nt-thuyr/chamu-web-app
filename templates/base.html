@@ -25,9 +25,12 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">{% trans "Home" %}</a>
+                        <a class="nav-link" href="{% url 'homepage' %}">{% trans "Home" %}</a>
                     </li>
-                    <!-- Example future language switcher -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">{% trans "About" %}</a>
+                    </li>
+                    <!-- Example future language switcher
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
                             {% trans "Language" %}
@@ -35,9 +38,10 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="?lang=en">English</a></li>
                             <li><a class="dropdown-item" href="?lang=vi">Tiếng Việt</a></li>
-                            <!-- Add more languages here -->
+                            Add more languages here
                         </ul>
                     </li>
+                    -->
                 </ul>
             </div>
         </div>

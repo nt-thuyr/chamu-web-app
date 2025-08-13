@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Thank You" %} - {{ municipality.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="text-center mb-4">
+                <div class="alert alert-success" role="alert">
+                    <h2 class="alert-heading">
+                        <i class="fas fa-check-circle me-2"></i>{% trans "Thank You!" %}
+                    </h2>
+                    <p class="mb-0">{% trans "Your evaluation has been successfully submitted and will help others make informed decisions." %}</p>
+                </div>
+            </div>
+
+            <h1 class="text-center mb-4">{{ municipality.name }}</h1>
+            <p class="text-center text-muted">
+                {% trans "In" %}: {{ prefecture.name }}
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mt-4 shadow-sm h-100">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-map-marker-alt me-2"></i>{% trans "Location & Image" %}
+                        </div>
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            {% if municipality_map %}
+                                {{ municipality_map|safe }}
+                            {% else %}
+                                <div class="alert alert-warning">{% trans "Map not available." %}</div>
+                            {% endif %}
+
+                            {% if image_url and image_url != 'https://via.placeholder.com/600x400' %}
+                                <img src="{{ image_url }}" class="img-fluid rounded mt-3" alt="{% trans 'Image of' %} {{ municipality.name }}" style="max-height: 400px; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mt-4 shadow-sm h-100">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-star-half-alt me-2"></i>{% trans "Score Summary" %}
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{% trans "Criteria" %}</th>
+                                        <th class="text-center">{% trans "Your Score" %}</th>
+                                        <th class="text-center">{% trans "Current Score" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detail in score_details %}
+                                    <tr>
+                                        <td><strong>{{ detail.criteria_name }}</strong></td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill bg-primary">{{ detail.user_score }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge rounded-pill bg-secondary">{{ detail.current_score }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-muted">
+                            <small>{% trans "Note: Lower scores are better. Your score contributes to the current score." %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle me-2"></i>{% trans "Description" %}
+                </div>
+                <div class="card-body">
+                    <p>{{ municipality_description }}</p>
+                    {% if wiki_url %}
+                        <a href="{{ wiki_url }}" class="btn btn-link px-0" target="_blank">
+                            <i class="fab fa-wikipedia-w me-1"></i>{% trans "Read more on Wikipedia" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="text-center mt-5 mb-5">
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="{% url 'homepage' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>{% trans "Back to Home" %}
+                    </a>
+                    <a href="{% url 'match_info' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-search me-2"></i>{% trans "Find Your Next Place" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

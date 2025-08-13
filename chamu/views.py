@@ -104,6 +104,9 @@ def ajax_update(request):
         return JsonResponse({"success": True, "username": user.username})
     return None
 
+def about_view(request):
+    """About page view"""
+    return render(request, 'about.html')
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
@@ -153,7 +156,7 @@ def evaluation_survey_view(request, user_info_id):
                 # Update municipality average score after new evaluations
                 update_municipality_avg_score(user_info.municipality, user_info.country)
 
-            return redirect('homepage')
+            return redirect('thank_you', user_info_id=user_info.id)
     else:
         formset = evaluation_survey_form_set()
 
@@ -165,6 +168,70 @@ def evaluation_survey_view(request, user_info_id):
         'criteria_list': criteria_list,
         'form_criteria': form_criteria,
         'user_info': user_info
+    })
+
+
+def thank_you_view(request, user_info_id):
+    """Trang cảm ơn sau khi làm khảo sát đánh giá."""
+    user_info = get_object_or_404(UserInfo, id=user_info_id)
+    municipality = user_info.municipality
+    prefecture = municipality.prefecture
+
+    # Lấy điểm đánh giá của người dùng
+    user_evaluations = EvaluationSurvey.objects.filter(
+        user=user_info,
+        municipality=municipality
+    ).order_by('criteria__name')
+
+    # Lấy điểm cuối cùng hiện tại của thành phố
+    final_scores = MunicipalityMatchingScore.objects.filter(
+        municipality=municipality,
+        country=user_info.country
+    )
+    final_scores_map = {score.criteria_id: score.final_score for score in final_scores}
+
+    # Kết hợp điểm người dùng và điểm cuối cùng để hiển thị
+    score_details = []
+    for evaluation in user_evaluations:
+        final_score = final_scores_map.get(evaluation.criteria_id)
+        if final_score is None:
+            # Nếu không có điểm cuối cùng, lấy điểm cơ sở hoặc mặc định là 3.0
+            try:
+                base_score = MunicipalityBaseScore.objects.get(
+                    municipality=municipality,
+                    criteria=evaluation.criteria,
+                    country=user_info.country
+                ).base_score
+                final_score = base_score
+            except MunicipalityBaseScore.DoesNotExist:
+                final_score = 3.0  # Điểm mặc định
+
+        score_details.append({
+            'criteria_name': evaluation.criteria.name,
+            'user_score': evaluation.score,
+            'current_score': round(final_score, 2)
+        })
+
+    # Lấy thông tin từ Wikipedia
+    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
+
+    # Tạo bản đồ Folium
+    municipality_map = None
+    if municipality.latitude and municipality.longitude:
+        map_center = [float(municipality.latitude), float(municipality.longitude)]
+        m = folium.Map(location=map_center, zoom_start=12)
+        folium.Marker(map_center, tooltip=municipality.name).add_to(m)
+        municipality_map = m._repr_html_()
+
+    return render(request, 'thank_you.html', {
+        'user_info': user_info,
+        'municipality': municipality,
+        'prefecture': prefecture,
+        'score_details': score_details,
+        'municipality_description': description,
+        'image_url': image_url,
+        'wiki_url': wiki_url,
+        'municipality_map': municipality_map,
     })
 
 def matching_survey_view(request, user_info_id, target_prefecture_id):
@@ -188,6 +255,8 @@ def matching_survey_view(request, user_info_id, target_prefecture_id):
         'criteria_list': criteria_list,
         'ranks': ranks,
     })
+
+
 
 def matching_results_view(request, user_info_id, target_prefecture_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)

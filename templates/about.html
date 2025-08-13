@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "About DOKO" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="text-center mb-4">{% trans "About DOKO" %}</h1>
+            <p class="text-center lead text-muted">
+                {% trans "Where's next, JAPAN?" %}
+            </p>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-question-circle me-2"></i>{% trans "What is DOKO?" %}
+                </div>
+                <div class="card-body">
+                    <p>{% trans "DOKO is a comprehensive platform designed to help people find their ideal living area in Japan. Whether you're planning to move, study, or work in Japan, DOKO provides personalized recommendations based on your preferences and priorities." %}</p>
+                    <p>{% trans "Our system analyzes various criteria such as cost of living, safety, transportation, cultural attractions, and more to match you with municipalities that best suit your lifestyle needs." %}</p>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-cogs me-2"></i>{% trans "How It Works" %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>{% trans "1. Matching Survey" %}</h5>
+                            <p>{% trans "Tell us your preferences by ranking criteria that matter most to you. Our algorithm will find municipalities that match your priorities." %}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{% trans "2. Evaluation Survey" %}</h5>
+                            <p>{% trans "Share your experience of living in a Japanese municipality to help others make informed decisions." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-star me-2"></i>{% trans "Key Features" %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Personalized matching algorithm" %}</li>
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Comprehensive municipality database" %}</li>
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Real user evaluations and feedback" %}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Detailed location information" %}</li>
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Interactive maps and visuals" %}</li>
+                                <li><i class="fas fa-check text-success me-2"></i>{% trans "Multi-language support" %}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <i class="fas fa-lightbulb me-2"></i>{% trans "Our Mission" %}
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{% trans "We believe that finding the right place to live should be easy and informed. DOKO bridges the gap between data and personal preferences, helping you discover your perfect home in Japan through the power of community-driven insights and smart matching technology." %}</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 mb-5">
+                <a href="{% url 'homepage' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home me-2"></i>{% trans "Start Your Journey" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
