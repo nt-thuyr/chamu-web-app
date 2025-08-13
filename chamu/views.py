@@ -12,7 +12,7 @@ from .forms import (
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture, Country
+    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture
 )
 
 # -----------------
@@ -58,37 +58,19 @@ def ajax_signup(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         password2 = request.POST.get("password2")
-        country_id = request.POST.get("country")
-        prefecture_id = request.POST.get("prefecture")
-        municipality_id = request.POST.get("municipality")
-        errors = []
         # Kiểm tra username trùng
         if User.objects.filter(username=username).exists():
-            errors.append("Username already exists.")
+            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
         # Kiểm tra mật khẩu nhập lại
         if password != password2:
-            errors.append("Passwords do not match.")
+            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
+        # Kiểm tra độ dài mật khẩu
         if len(password) < 6:
-            errors.append("Your password must have at least 6 characters.")
+            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
         # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
-        if not country_id or not prefecture_id or not municipality_id:
-            errors.append("You must select country, prefecture and municipality.")
 
-        if errors:
-            return JsonResponse({"success": False, "errors": errors})
         user = User.objects.create_user(username=username, password=password)
         user.save()
-
-        # Lưu UserInfo
-        country = Country.objects.filter(id=country_id).first()
-        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
-        municipality = Municipality.objects.filter(id=municipality_id).first()
-        UserInfo.objects.create(
-            user=user,
-            name=username,
-            country=country,
-            municipality=municipality
-        )
         # Đăng nhập luôn
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -96,56 +78,31 @@ def ajax_signup(request):
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
 
-
 @login_required
 def ajax_update(request):
     if request.method == "POST":
-        user = request.user
-        new_username = request.POST.get("username", "").strip()
-        new_password = request.POST.get("password", "")
-        password2 = request.POST.get("password2", "")
-        errors = []
+        current_password = request.POST.get("current_password")
+        new_username = request.POST.get("username")
+        new_password = request.POST.get("password")
 
-        # 1. Kiểm tra đủ trường
-        if not new_username or not new_password or not password2:
-            errors.append("Please fill in all fields.")
+        user = authenticate(request, username=request.user.username, password=current_password)
+        if not user:
+            return JsonResponse({"success": False, "error": "Current password is incorrect"})
 
-        # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
-        if new_username != user.username:
-            if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
-                errors.append("Username already exists.")
-            if len(new_username) < 1:
-                errors.append("Username cannot be empty.")
-
-        # 3. Kiểm tra password
-        if len(new_password) < 6:
-            errors.append("Your password must have at least 6 characters.")
-
-        # 4. Kiểm tra nhập lại mật khẩu
-        if new_password != password2:
-            errors.append("Passwords do not match.")
-
-        # 5. Nếu có lỗi thì trả về luôn
-        if errors:
-            return JsonResponse({"success": False, "errors": errors})
-
-        # 6. Update nếu hợp lệ
-        changed = False
-        if new_username != user.username:
+        if new_username:
             user.username = new_username
-            changed = True
-        if new_password and not check_password(new_password, user.password):
+        if new_password:
             user.set_password(new_password)
-            changed = True
+        user.save()
 
-        if changed:
-            user.save()
-            from django.contrib.auth import update_session_auth_hash
-            update_session_auth_hash(request, user)
-            return JsonResponse({"success": True, "changed": True, "username": user.username})
-        else:
-            return JsonResponse({"success": True, "changed": False})
-    return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
+        # Login lại nếu đổi password
+        if new_password:
+            user = authenticate(request, username=user.username, password=new_password)
+            if user:
+                login(request, user)
+
+        return JsonResponse({"success": True, "username": user.username})
+    return None
 
 
 def evaluation_survey_view(request, user_info_id):
@@ -248,7 +205,7 @@ def matching_results_view(request, user_info_id, target_prefecture_id):
     }
 
     matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country, target_prefecture_id)
-    matching_results = sorted(matching_results, key=lambda x: x['percentage'], reverse=True)
+    matching_results = sorted(matching_results, key=lambda x: x['score'])
 
     # Sort user preferences by rank (key) (make sure keys are integers)
     sorted_user_preferences_items = sorted(user_preferences.items(), key=lambda item: int(item[0]))
@@ -299,7 +256,7 @@ def update_municipality_final_score(municipality, country):
             base_score_obj = MunicipalityBaseScore.objects.get(municipality=municipality, criteria=criteria, country=country)
             base_score = base_score_obj.base_score
         except MunicipalityBaseScore.DoesNotExist:
-            base_score = 1.0
+            base_score = 3.0
 
         try:
             avg_score_obj = MunicipalityMatchingScore.objects.get(municipality=municipality, criteria=criteria, country=country)
@@ -359,7 +316,6 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
 
     # 4.Calculate matching scores
     matching_results = []
-    max_priority = len(user_preferences) + 1
 
     for municipality in municipalities:
         total_weighted_score = 0
@@ -369,7 +325,6 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
         # Loop through user preferences
         for rank_str, criteria_id in user_preferences.items():
             rank = int(rank_str)
-            weight = max_priority - rank
 
             criteria = criteria_map.get(criteria_id)
             if not criteria:
@@ -379,17 +334,16 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
             score_tuple = (municipality.id, criteria.id)
             municipality_score = matching_scores_map.get(score_tuple)
             if municipality_score is None:
-                municipality_score = base_scores_map.get(score_tuple, 1.0)
+                municipality_score = base_scores_map.get(score_tuple, 3.0)
 
-            total_weighted_score += municipality_score * weight
-            total_weight += weight
+            total_weighted_score += municipality_score * rank
+            total_weight += rank
 
             criteria_details.append({
                 'criteria_name': criteria.name,
                 'priority': rank,
-                'weight': weight,
                 'municipality_score': municipality_score,
-                'weighted_score': municipality_score * weight
+                'weighted_score': municipality_score * rank
             })
 
         # Calculate mismatching score and percentage
@@ -543,6 +497,3 @@ def get_municipalities(request):
         return JsonResponse(list(municipalities), safe=False)
     except (ValueError, TypeError):
         return JsonResponse([], safe=False)
-def get_prefectures(request):
-    prefectures = Prefecture.objects.all().values('id', 'name')
-    return JsonResponse(list(prefectures), safe=False)

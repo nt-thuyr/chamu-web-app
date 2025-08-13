@@ -7,7 +7,7 @@ from chamu.models import Municipality, Country, Criteria, MunicipalityBaseScore
 
 def normalize_score(raw_value, min_value, max_value, is_reverse=False):
     if max_value == min_value:
-        score = 1.0
+        score = 3.0
     else:
         score = ((raw_value - min_value) / (max_value - min_value)) * 4 + 1
 
