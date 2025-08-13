@@ -12,7 +12,7 @@ from .forms import (
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture
+    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture, Country
 )
 
 # -----------------
@@ -58,25 +58,44 @@ def ajax_signup(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         password2 = request.POST.get("password2")
+        country_id = request.POST.get("country")
+        prefecture_id = request.POST.get("prefecture")
+        municipality_id = request.POST.get("municipality")
+        errors = []
         # Kiểm tra username trùng
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
+            errors.append("Username already exists.")
         # Kiểm tra mật khẩu nhập lại
         if password != password2:
-            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
-        # Kiểm tra độ dài mật khẩu
+            errors.append("Passwords do not match.")
         if len(password) < 6:
-            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
+            errors.append("Your password must have at least 6 characters.")
         # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
+        if not country_id or not prefecture_id or not municipality_id:
+            errors.append("You must select country, prefecture and municipality.")
 
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
         user = User.objects.create_user(username=username, password=password)
         user.save()
+
+        # Lưu UserInfo
+        country = Country.objects.filter(id=country_id).first()
+        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
+        municipality = Municipality.objects.filter(id=municipality_id).first()
+        UserInfo.objects.create(
+            user=user,
+            name=username,
+            country=country,
+            municipality=municipality
+        )
         # Đăng nhập luôn
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
+
 
 @login_required
 def ajax_update(request):
@@ -500,3 +519,6 @@ def get_municipalities(request):
         return JsonResponse(list(municipalities), safe=False)
     except (ValueError, TypeError):
         return JsonResponse([], safe=False)
+def get_prefectures(request):
+    prefectures = Prefecture.objects.all().values('id', 'name')
+    return JsonResponse(list(prefectures), safe=False)
