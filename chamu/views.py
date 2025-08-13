@@ -452,7 +452,7 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
 
     description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
 
-    # Tạo bản đồ bằng folium chỉ khi có tọa độ
+    # Create map by folium when there is coordinates
     municipality_map = None
     if municipality.latitude and municipality.longitude:
         map_center = [float(municipality.latitude), float(municipality.longitude)]
@@ -473,26 +473,21 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
 
 
 def get_municipality_info_from_wiki(municipality_name):
-    """Lấy mô tả và URL từ Wikipedia."""
+    """Get desciption, image and link from wikipedia"""
     try:
-        # Tìm kiếm trang Wikipedia bằng tên thành phố
-        # Lấy trang tiếng Nhật để có thông tin chi tiết hơn
+        # Find Wikipedia page for the municipality
         wikipedia.set_lang("ja")
         page = wikipedia.page(municipality_name, auto_suggest=True)
 
-        # Lấy mô tả tóm tắt và URL
         description = page.summary
         wiki_url = page.url
-
-        # Lấy hình ảnh đầu tiên nếu có
         image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
-
         return description, image_url, wiki_url
 
     except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError) as e:
-        print(f"Lỗi khi lấy thông tin từ Wikipedia: {e}")
-        # Trả về giá trị mặc định nếu không tìm thấy
-        return "Thông tin mô tả đang được cập nhật.", "https://via.placeholder.com/600x400", None
+        print(f"Error trying to get information from Wikipedia: {e}")
+        # Return default values if there's an error
+        return "Description is being updated", "https://via.placeholder.com/600x400", None
 
 def get_municipalities(request):
     prefecture_id = request.GET.get('prefecture_id')
