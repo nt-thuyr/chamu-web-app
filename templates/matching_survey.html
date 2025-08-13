@@ -14,7 +14,7 @@
         <form method="post" id="survey-form" novalidate>
             {% csrf_token %}
             {% for rank in ranks %}
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="rank_{{ rank }}" class="form-label">Rank {{ rank }}:</label>
                     <select class="form-select" id="rank_{{ rank }}" name="rank_{{ rank }}" required>
                         <option value="">--- {% trans "Select a criteria" %} ---</option>
