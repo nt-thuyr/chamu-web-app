@@ -4,6 +4,8 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<div class="bg_test">
+</div>
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
         <h2 class="mb-4 text-center">Where's next, JAPAN?</h2>
@@ -13,9 +15,9 @@
             <!-- Hidden field to track next_action -->
             <input type="hidden" name="next_action" id="next_action_input" value="">
             {{ form.as_p }}
-            <div class="d-grid gap-2 col-6 mx-auto">
-                <button type="button" id="start-matching-btn" class="btn btn-outline-primary w-100">Start Matching Survey</button>
-                <button type="button" id="start-evaluation-btn" class="btn btn-outline-primary w-100">Start Evaluation Survey</button>
+            <div class="d-flex justify-content-center gap-3">
+                <button type="button" id="start-matching-btn" class="btn btn-outline-primary">Start Matching Survey</button>
+                <button type="button" id="start-evaluation-btn" class="btn btn-outline-primary">Start Evaluation Survey</button>
             </div>
         </form>
     </div>

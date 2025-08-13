@@ -2,7 +2,6 @@ import csv
 from django.core.management.base import BaseCommand
 from chamu.models import Criteria # Đảm bảo tên model khớp
 
-
 class Command(BaseCommand):
     help = 'Imports country data from a CSV file.'
 
@@ -34,7 +33,7 @@ class Command(BaseCommand):
                             is_reverse_bool = False
 
                         # Get the existing criteria or create a new one
-                        criteria, created = Criteria.objects.get_or_create(
+                        criteria, created = Criteria.objects.update_or_create(
                             name=criteria_name,
                             defaults={
                                 'left_label': left_label,

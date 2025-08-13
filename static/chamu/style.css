@@ -2,18 +2,173 @@ body {
     font-family: "Libertinus Serif", serif;
     font-weight: 400;
     font-style: normal;
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+  background-color: #2b5273 !important;
+}
+
+footer {
+    padding-top: 80px;
+    opacity: 0;
 }
 
 label,
 .navbar-brand {
-    font-family: "Libertinus Serif", serif;
     font-weight: 700;
+}
+
+.bg_test {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url(桜.jpg); 
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat;
+    z-index: -1; 
+    opacity: 0.5;
+}
+
+.bg_test-text {
+    border:  solid 1px;                             
+    display:  inline-block;                         
+    padding: 10px 20px;                             
+    background-color: rgba(255, 255, 255, 0.7);    
+}
+.bg_test {
+    text-align:  center;    
+    padding:  150px;        
+    border: solid 2px;      
+}
+
+.btn-outline-primary {
+    margin-top: 40px;
+    display: flex;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 10px; 
+  padding: 10px 40px;
+  white-space: pre-wrap;
+  border-radius: 50px;
+  color: #fff;
+  border: 2px solid #909eac;
+  background-color: #4e4e4e;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+}
+
+.btn-outline-primary:hover {
+  background-color: #89beff; 
+  border-color: #78b5ff;
+  color: #fff;
+  transform: translateY(-3px); 
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); 
+}
+/**/
+.card {
+    border: none;
+    border-radius: 15px; /* 角をより丸くする */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* より立体的なシャドウ */
+ 
+}
+
+.card:hover {
+    transform: translateY(-5px); /* ホバー時に少し浮き上がるアニメーション */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Cardヘッダーのスタイルを変更 */
+.card-header {
+    background-image: linear-gradient(135deg, #2b5273 0%, #4e738b 100%); /* グラデーション背景 */
+    color: #fff;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.card-header h2 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+.mb-3 label {
+  white-space: nowrap;
+}
+
+.mb-2 label {
+  display: flex;
+  justify-content: flex-start; /* 左寄せ */
+  align-items: center;         /* 垂直方向は中央のまま */
+  width: 150px;           /* 横幅を広げる */
+  height: px;          /* 縦幅を小さくする */
+  border-radius: 50%;     /* 50%にすると楕円形になる */
+  background-color: white;
+}
+
+/* ボタンのスタイルを変更 */
+.btn-primary {
+    background-image: linear-gradient(to right, #2b5273 0%, #4e738b 51%, #2b5273 100%);
+    background-size: 200% auto;
+    color: white;
+    border: none;
+    border-radius: 100px;
+    padding: 15px 45px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: 0.5s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+    background-position: right center; /* ホバー時にグラデーションが移動する */
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ラベルと入力フィールドのスタイル */
+.form-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    transition: color 0.3s ease;
+}
+
+.form-control {
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #2b5273;
+    box-shadow: 0 0 0 0.2rem rgba(43, 82, 115, 0.25);
+    outline: none;
 }
 
 input[type="radio"] {
     display: none;
 }
-
 label {
     display: flex;
     justify-content: center;
@@ -23,65 +178,85 @@ label {
     height: 50px;
     border: 1px solid rgba(256, 256, 256, 0.2);
     border-radius: 50%;
-    background-color: #f8f9fa;
+    background-color: #F8F9FA;
     color: #495057;
-    transition: all 0.3s ease-in-out; 
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 1 1px 10px rgba(0, 0, 0, 0.2);
     letter-spacing: 2px;
 }
-
 table {
     border-collapse: collapse;
     width: 100%;
-    background: linear-gradient(145deg, #ffffff, #f5f5f5); 
+    background: linear-gradient(145deg, #FFFFFF, #F5F5F5);
     border-radius: 12px;
-    overflow: hidden; 
+    overflow: hidden;
     box-shadow: 0 4px 45px rgba(0,0,0,0.4);
     transition: all 0.3s ease;
 }
-
-
-
 label:hover {
-    background-color: #eef1f4;
-    border-color: #dcdcdc;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-    transform: translateY(-2px); 
+    background-color: #EEF1F4;
+    border-color: #DCDCDC;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2); 
+  background-color: #5a6268; 
+  border-color: #5a6268;
 }
 
 input[type="radio"]:checked + label {
     background-color: #808080;
     color: #fff;
     border-color: #808080;
-    box-shadow: 0 6px 12px rgba(2, 2, 2, 0.5); 
-    transform: translateY(-5px) scale(1.01); 
+    box-shadow: 0 6px 12px rgba(2, 2, 2, 0.5);
+    transform: translateY(-5px) scale(1.01);
 }
-
 h2 {
     text-align: center;
     font-size: 55px;
     font-weight: bold;
     margin-bottom: 50px;
-    background: linear-gradient(90deg, #b5b5b5, #5f5f5f); /* オレンジ系グラデ */
-    -webkit-background-clip: text; 
+    background: linear-gradient(90deg, #B5B5B5, #5F5F5F); /* オレンジ系グラデ */
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     position: relative;
     animation: fadeInDown 1s ease-out forwards;
 }
-
-
 h2::after {
     content: "";
     display: block;
     width: 0;
     height: 4px;
-    background: linear-gradient(90deg, #b2b2b2, #a3a19f);
+    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
     margin: 20px auto 0;
     border-radius: 20px;
     animation: expandBar 0.8s ease-out forwards;
     animation-delay: 0.5s;
 }
 
+h3 {
+    text-align: center;
+    font-size: 55px;
+    font-weight: bold;
+    margin-bottom: 50px;
+    color: #FFFFFF;
+    position: relative;
+    animation: fadeInDown 1s ease-out forwards;
+}
+h3::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
+    margin: 20px auto 0;
+    border-radius: 20px;
+    animation: expandBar 0.8s ease-out forwards;
+    animation-delay: 0.5s;
+}
 @keyframes fadeInDown {
     0% {
         opacity: 0;
@@ -92,58 +267,46 @@ h2::after {
         transform: translateY(0);
     }
 }
-
 @keyframes expandBar {
     to {
         width: 120px;
     }
 }
-
 button[type="submit"] {
     display: block;
     margin: 0 auto;
     margin-top: 50px;
     background-color: #000000;
     font-size: 20px;
-
 }
-
-
 .question-block {
     margin-bottom: 40px;
     text-align: center;
 }
-
 .question-text {
     font-size: 1.3rem;
     font-weight: bold;
     color: #555;
     margin-bottom: 20px;
 }
-
 .rating-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
 }
-
 .left-label {
     font-weight: bold;
-    color: #2e8b57; 
+    color: #2E8B57;
 }
-
 .right-label {
     font-weight: bold;
-    color: #8b5fbf; 
+    color: #8B5FBF;
 }
-
 .rating-options {
     display: flex;
     gap: 10px;
 }
-
-
 th, td {
     padding: 14px;
     text-align: center;
@@ -151,10 +314,7 @@ th, td {
     color: #444;
     border-bottom: 1px solid #ddd;
 }
-
-
 tbody tr:hover td {
-    background-color: rgba(128, 128, 128, 0.5); 
-    transition: background-color 0.25s ease; 
+    background-color: rgba(128, 128, 128, 0.5);
+    transition: background-color 0.25s ease;
 }
-
