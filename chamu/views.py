@@ -452,10 +452,5 @@ def get_municipalities(request):
     except (ValueError, TypeError):
         return JsonResponse([], safe=False)
 def get_prefectures(request):
-    country_id = request.GET.get('country_id')
-    if not country_id:
-        return JsonResponse([], safe=False)
-    # Nếu prefecture không liên kết trực tiếp với country, bạn có thể lấy tất cả Prefecture
-    # Nếu có, hãy filter Prefecture theo country_id (giả sử có trường country trong Prefecture)
     prefectures = Prefecture.objects.all().values('id', 'name')
     return JsonResponse(list(prefectures), safe=False)
