@@ -133,12 +133,12 @@ LANGUAGES = [
 ]
 
 # Cấu hình Celery Broker và Backend
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh' # Hoặc múi giờ của bạn
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh' # Hoặc múi giờ của bạn
 
 # # Cấu hình Celery Beat cho tác vụ định kỳ
 # CELERY_BEAT_SCHEDULE = {
