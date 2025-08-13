@@ -153,13 +153,11 @@
             <div class="mb-3">
               <label for="signup-prefecture" class="form-label">Prefecture</label>
               <select class="form-control" id="signup-prefecture" name="prefecture" required disabled>
-                <option value="">Select prefecture</option>
               </select>
             </div>
             <div class="mb-3">
               <label for="signup-municipality" class="form-label">Municipality</label>
               <select class="form-control" id="signup-municipality" name="municipality" required disabled>
-                <option value="">Select municipality</option>
               </select>
             </div>
           </div>
@@ -238,22 +236,22 @@ const updateHintHtml = `
     $(function() {
         // Khởi tạo Tom Select single-select cho từng trường
         const countryTomSelect = new TomSelect('#signup-country', {
-            maxOptions: 1000,
-            allowEmptyOption: true,
+            placeholder: 'Select country',
+            allowEmptyOption: false,
             create: false,
-            placeholder: 'Select country'
+            maxOptions: 1000,
         });
         const prefectureTomSelect = new TomSelect('#signup-prefecture', {
-            maxOptions: 1000,
-            allowEmptyOption: true,
+            placeholder: 'Select prefecture',
+            allowEmptyOption: false,
             create: false,
-            placeholder: 'Select prefecture'
+            maxOptions: 1000,
         });
         const municipalityTomSelect = new TomSelect('#signup-municipality', {
-            maxOptions: 1000,
-            allowEmptyOption: true,
+            placeholder: 'Select municipality',
+            allowEmptyOption: false,
             create: false,
-            placeholder: 'Select municipality'
+            maxOptions: 1000,
         });
 
         // Hiện modal login khi nhấn nút Login
@@ -270,11 +268,9 @@ const updateHintHtml = `
         prefectureTomSelect.clearOptions();
         prefectureTomSelect.setValue("");
         prefectureTomSelect.disable();
-        $('#signup-prefecture').html('<option value="">Select prefecture</option>');
         municipalityTomSelect.clearOptions();
         municipalityTomSelect.setValue("");
         municipalityTomSelect.disable();
-        $('#signup-municipality').html('<option value="">Select municipality</option>');
     });
 
         // Submit login AJAX
@@ -300,18 +296,30 @@ const updateHintHtml = `
 
         // Submit signup AJAX
         $('#signup-form').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: '{% url "ajax_signup" %}',
-            method: 'POST',
-            data: {
-                 username: $('#signup-username').val(),
-                 password: $('#signup-password').val(),
-                 password2: $('#signup-password2').val(),
-                 country: $('#signup-country').val(),
-                 prefecture: $('#signup-prefecture').val(),
-                 municipality: $('#signup-municipality').val()
-            },
+            e.preventDefault();
+
+            // Lấy giá trị từ TomSelect
+            const country = countryTomSelect.getValue();
+            const prefecture = prefectureTomSelect.getValue();
+            const municipality = municipalityTomSelect.getValue();
+
+            // Kiểm tra nếu chưa chọn đủ
+            if (!country || !prefecture || !municipality) {
+                $('#signup-error-list').html('<ul class="mb-0"><li>Bạn phải chọn đủ Country, Prefecture và Municipality.</li></ul>').show();
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "ajax_signup" %}',
+                method: 'POST',
+                data: {
+                    username: $('#signup-username').val(),
+                    password: $('#signup-password').val(),
+                    password2: $('#signup-password2').val(),
+                    country: country,
+                    prefecture: prefecture,
+                    municipality: municipality
+                },
                 success: function(data) {
                     if (data.success) {
                         $('#signupModal').modal('hide');
@@ -334,13 +342,7 @@ const updateHintHtml = `
 
         // Khi chọn country, chỉ reset prefecture và municipality, rồi luôn lấy toàn bộ prefecture
         $('#signup-country').on('change', function() {
-            let $pref = $('#signup-prefecture');
-            let $muni = $('#signup-municipality');
-
-            $pref.html('<option value="">Select prefecture</option>');
-            $muni.html('<option value="">Select municipality</option>');
-
-            prefectureTomSelect.clearOptions();
+            prefectureTomSelect.clearOptions(); // Xóa hết option cũ
             prefectureTomSelect.setValue("");
             prefectureTomSelect.disable();
 
@@ -348,21 +350,17 @@ const updateHintHtml = `
             municipalityTomSelect.setValue("");
             municipalityTomSelect.disable();
 
-            // Luôn luôn lấy toàn bộ prefecture (không truyền country_id)
+            // Lấy toàn bộ prefecture
             $.get('/api/prefectures/', function(data){
                 data.forEach(function(p){
-                    $pref.append(`<option value="${p.id}">${p.name}</option>`);
+                    prefectureTomSelect.addOption({value: p.id, text: p.name});
                 });
-                prefectureTomSelect.sync();
                 prefectureTomSelect.enable();
             });
         });
-        // Khi chọn prefecture, load municipality
+
         $('#signup-prefecture').on('change', function() {
             let prefectureId = $(this).val();
-            let $muni = $('#signup-municipality');
-            $muni.html('<option value="">Select municipality</option>');
-
             municipalityTomSelect.clearOptions();
             municipalityTomSelect.setValue("");
             municipalityTomSelect.disable();
@@ -370,10 +368,9 @@ const updateHintHtml = `
             if (prefectureId) {
                 $.get('/api/municipalities/', { prefecture_id: prefectureId }, function(data){
                     data.forEach(function(m){
-                        $muni.append(`<option value="${m.id}">${m.name}</option>`);
+                        municipalityTomSelect.addOption({value: m.id, text: m.name});
                     });
-                    municipalityTomSelect.sync();
-                    municipalityTomSelect.enable(); // <--- Enable sau khi load xong
+                    municipalityTomSelect.enable();
                 });
             }
         });
@@ -391,7 +388,6 @@ const updateHintHtml = `
             // Gắn lại chú thích vào đầu modal-body
             $('#update-hint').remove();
             $('.modal-body', '#update-form').prepend(updateHintHtml);
-
             $('#updateModal').modal('show');
         });
 
