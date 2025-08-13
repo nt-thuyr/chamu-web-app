@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-
+import wikipedia, folium
 from .forms import (
     BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
 )
@@ -404,22 +404,95 @@ def evaluate_info_view(request):
     return render(request, 'evaluate_info.html', {'form': form})
 
 
-def municipality_details_view(request, municipality_id):
-    # Get the municipality by ID
+def municipality_details_view(request, municipality_id, user_info_id=None):
     municipality = get_object_or_404(Municipality, id=municipality_id)
-
-    # Get the prefecture and user info ID from session
     prefecture = municipality.prefecture
-    user_info_id = request.session.get('user_info_id')
-    # If user_info_id is not set, redirect to match_info
+
+    # Handle the back button logic from the previous conversation
+    # If user_info_id is passed, use it. Otherwise, try to get from session.
     if not user_info_id:
-        return redirect('match_info')
+        user_info_id = request.session.get('user_info_id')
+        if not user_info_id:
+            # If no user ID, just don't show the back button.
+            # No need to redirect, just a cleaner page.
+            pass
+
+    # Fetch user preferences from the session to calculate scores
+    preferences_key = f'preferences_{user_info_id}'
+    user_preferences = request.session.get(preferences_key, {})
+
+    criteria_details = []
+    if user_preferences:
+        # Fetch scores for this municipality and the user's criteria
+        criteria_ids = [int(cid) for cid in user_preferences.values()]
+
+        base_scores = {
+            s.criteria_id: s.base_score
+            for s in MunicipalityBaseScore.objects.filter(
+                municipality=municipality, criteria__id__in=criteria_ids
+            )
+        }
+        matching_scores = {
+            s.criteria_id: s.final_score
+            for s in MunicipalityMatchingScore.objects.filter(
+                municipality=municipality, criteria__id__in=criteria_ids
+            )
+        }
+
+        # Iterate through preferences to build the details list
+        criteria_map = {c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)}
+        for rank_str, criteria_id in user_preferences.items():
+            rank = int(rank_str)
+            score = matching_scores.get(criteria_id, base_scores.get(criteria_id, 1.0))
+            criteria_details.append({
+                'criteria_name': criteria_map.get(criteria_id, 'N/A'),
+                'priority': rank,
+                'municipality_score': score,
+            })
+
+    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
+
+    # Tạo bản đồ bằng folium chỉ khi có tọa độ
+    municipality_map = None
+    if municipality.latitude and municipality.longitude:
+        map_center = [float(municipality.latitude), float(municipality.longitude)]
+        m = folium.Map(location=map_center, zoom_start=12)
+        folium.Marker(map_center, tooltip=municipality.name).add_to(m)
+        municipality_map = m._repr_html_()
 
     return render(request, 'municipality_details.html', {
         'municipality': municipality,
         'prefecture': prefecture,
-        'user_info_id': user_info_id
+        'user_info_id': user_info_id,
+        'criteria_details': criteria_details,
+        'municipality_description': description,  # Placeholder description
+        'image_url': image_url,  # Placeholder image URL
+        'wiki_url': wiki_url,  # Placeholder Wikipedia URL
+        'municipality_map': municipality_map,  # Folium map HTML
     })
+
+
+def get_municipality_info_from_wiki(municipality_name):
+    """Lấy mô tả và URL từ Wikipedia."""
+    try:
+        # Tìm kiếm trang Wikipedia bằng tên thành phố
+        # Lấy trang tiếng Nhật để có thông tin chi tiết hơn
+        wikipedia.set_lang("ja")
+        page = wikipedia.page(municipality_name, auto_suggest=True)
+
+        # Lấy mô tả tóm tắt và URL
+        description = page.summary
+        wiki_url = page.url
+
+        # Lấy hình ảnh đầu tiên nếu có
+        image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
+
+        return description, image_url, wiki_url
+
+    except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError) as e:
+        print(f"Lỗi khi lấy thông tin từ Wikipedia: {e}")
+        # Trả về giá trị mặc định nếu không tìm thấy
+        return "Thông tin mô tả đang được cập nhật.", "https://via.placeholder.com/600x400", None
 
 def get_municipalities(request):
     prefecture_id = request.GET.get('prefecture_id')

@@ -1,34 +1,74 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% trans "About Municipality" %}{% endblock %}
+{% block title %}{% trans "About" %} {{ municipality.name }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row">
-        <div class="col-md-8 offset-md-2">
+        <div class="col-md-10 offset-md-1">
             <h1 class="text-center mb-4">{{ municipality.name }}</h1>
             <p class="text-center text-muted">
                 {% trans "In" %}: {{ prefecture.name }}
             </p>
 
-            <div class="card mt-4">
-                <div class="card-header">
-                    {% trans "Basic Information" %}
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle me-2"></i>{% trans "Description" %}
                 </div>
                 <div class="card-body">
-                    <p><strong>ID:</strong> {{ municipality.id }}</p>
-                    <p><strong>{% trans "Description" %}:</strong> {% trans "Details information of the municipality." %}</p>
-                    </div>
+                    <p>{{ municipality_description }}</p>
+                    {% if wiki_url %}
+                        <a href="{{ wiki_url }}" class="btn btn-link px-0" target="_blank">
+                            <i class="fab fa-wikipedia-w me-1"></i>{% trans "Read more on Wikipedia" %}
+                        </a>
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="text-center mt-4">
+            {% if criteria_details %}
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-star me-2"></i>{% trans "Municipality Scores by Criteria" %}
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for detail in criteria_details %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ detail.criteria_name }}</strong>
+                            <small class="text-muted">({% trans "Your Priority" %}: {{ detail.priority }})</small>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">
+                            {% trans "Score" %}: {{ detail.municipality_score|floatformat:2 }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="card-footer text-muted">
+                    <small>{% trans "Note: 1.0 indicates a high score, 5.0 indicates a low score." %}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-map-marker-alt me-2"></i>{% trans "Location & Image" %}
+                </div>
+                <div class="card-body text-center">
+                    {{ municipality_map|safe }}
+
+                    <img src="{% if image_url %}{{ image_url }}{% else %}https://via.placeholder.com/600x400{% endif %}" class="img-fluid rounded mt-3" alt="{% trans 'Image of' %} {{ municipality.name }}">
+                </div>
+            </div>
+
+            <div class="text-center mt-4 mb-5">
                 {% if user_info_id %}
-                    <a href="{% url 'matching_results' user_info_id=user_info_id target_prefecture_id=prefecture.id %}" class="btn btn-secondary">
-                        {% trans "Back to matching result page" %}
-                    </a>
+                <a href="{% url 'matching_results' user_info_id=user_info_id target_prefecture_id=prefecture.id %}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>{% trans "Back to matching result page" %}
+                </a>
                 {% endif %}
             </div>
+
         </div>
     </div>
 </div>
