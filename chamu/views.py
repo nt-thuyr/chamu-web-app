@@ -100,28 +100,52 @@ def ajax_signup(request):
 @login_required
 def ajax_update(request):
     if request.method == "POST":
-        current_password = request.POST.get("current_password")
-        new_username = request.POST.get("username")
-        new_password = request.POST.get("password")
+        user = request.user
+        new_username = request.POST.get("username", "").strip()
+        new_password = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
+        errors = []
 
-        user = authenticate(request, username=request.user.username, password=current_password)
-        if not user:
-            return JsonResponse({"success": False, "error": "Current password is incorrect"})
+        # 1. Kiểm tra đủ trường
+        if not new_username or not new_password or not password2:
+            errors.append("Please fill in all fields.")
 
-        if new_username:
+        # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
+        if new_username != user.username:
+            if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+                errors.append("Username already exists.")
+            if len(new_username) < 1:
+                errors.append("Username cannot be empty.")
+
+        # 3. Kiểm tra password
+        if len(new_password) < 6:
+            errors.append("Your password must have at least 6 characters.")
+
+        # 4. Kiểm tra nhập lại mật khẩu
+        if new_password != password2:
+            errors.append("Passwords do not match.")
+
+        # 5. Nếu có lỗi thì trả về luôn
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
+
+        # 6. Update nếu hợp lệ
+        changed = False
+        if new_username != user.username:
             user.username = new_username
-        if new_password:
+            changed = True
+        if new_password and not check_password(new_password, user.password):
             user.set_password(new_password)
-        user.save()
+            changed = True
 
-        # Login lại nếu đổi password
-        if new_password:
-            user = authenticate(request, username=user.username, password=new_password)
-            if user:
-                login(request, user)
-
-        return JsonResponse({"success": True, "username": user.username})
-    return None
+        if changed:
+            user.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            return JsonResponse({"success": True, "changed": True, "username": user.username})
+        else:
+            return JsonResponse({"success": True, "changed": False})
+    return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
 
 
 def evaluation_survey_view(request, user_info_id):
