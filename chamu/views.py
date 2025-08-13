@@ -291,7 +291,6 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
 
     prefecture_municipalities = Municipality.objects.filter(prefecture_id=target_prefecture_id)
     # 2. Get scores from the database
-    prefecture = get_object_or_404(Prefecture, id=target_prefecture_id)
     base_scores_qs = MunicipalityBaseScore.objects.filter(
         criteria__id__in=criteria_ids,
         municipality__in=prefecture_municipalities,
@@ -362,63 +361,6 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
         })
 
     return matching_results
-
-def get_municipality_matching_details(request, user_info_id, municipality_id):
-    """API endpoint to get detailed matching information for a specific municipality"""
-    municipality = get_object_or_404(Municipality, id=municipality_id)
-
-    # Get user preferences from session
-    preferences_key = f'preferences_{user_info_id}'
-    user_preferences = request.session.get(preferences_key)
-
-    if not user_preferences:
-        return JsonResponse({'error': 'No preferences found'}, status=400)
-
-    details = []
-    max_priority = len(user_preferences)
-
-    for criteria_id, preference_data in user_preferences.items():
-        weight = max_priority - preference_data['priority'] + 1
-
-        # Get criteria object
-        try:
-            criteria = Criteria.objects.get(id=criteria_id)
-        except Criteria.DoesNotExist:
-            continue
-
-        # Get municipality score
-        try:
-            municipality_score_obj = MunicipalityMatchingScore.objects.get(
-                municipality=municipality,
-                criteria=criteria
-            )
-            municipality_score = municipality_score_obj.avg_score
-            score_source = "Đánh giá của người dùng"
-        except MunicipalityMatchingScore.DoesNotExist:
-            try:
-                base_score_obj = MunicipalityBaseScore.objects.get(
-                    municipality=municipality,
-                    criteria=criteria
-                )
-                municipality_score = base_score_obj.base_score
-                score_source = "Dữ liệu cơ sở"
-            except MunicipalityBaseScore.DoesNotExist:
-                municipality_score = 1.0
-                score_source = "Điểm mặc định"
-
-        details.append({
-            'criteria_name': preference_data['criteria_name'],
-            'priority': preference_data['priority'],
-            'weight': weight,
-            'municipality_score': municipality_score,
-            'weighted_score': municipality_score * weight,
-            'score_source': score_source
-        })
-
-    return JsonResponse({
-        'municipality_name': municipality.name,
-        'details': details
-    })
 
 def calculate_matching_percentage(score):
     min_score = 1.0  # Minimum score
