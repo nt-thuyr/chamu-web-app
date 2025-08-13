@@ -12,12 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+#from celery.schedules import crontab
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-LOCALE_PATHS = [
-    os.path.join(BASE_DIR, 'locale'),
-]
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -133,3 +131,19 @@ LANGUAGES = [
     ('en', 'English'),
     ('ja', 'Japanese'),
 ]
+
+# Cấu hình Celery Broker và Backend
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh' # Hoặc múi giờ của bạn
+
+# # Cấu hình Celery Beat cho tác vụ định kỳ
+# CELERY_BEAT_SCHEDULE = {
+#     'delete-stale-user-info-every-night': {
+#         'task': 'your_app.tasks.delete_stale_user_info',
+#         'schedule': crontab(hour=2, minute=0, day_of_week=0), # Run every Sunday at 2:00 AM
+#     },
+# }
