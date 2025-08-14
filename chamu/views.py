@@ -12,7 +12,7 @@ from .forms import (
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityBaseScore, MunicipalityMatchingScore, EvaluationSurvey, Prefecture
+    MunicipalityScore, EvaluationSurvey, Prefecture
 )
 
 # -----------------
@@ -154,7 +154,7 @@ def evaluation_survey_view(request, user_info_id):
             if evaluations:
                 EvaluationSurvey.objects.bulk_create(evaluations)
                 # Update municipality average score after new evaluations
-                update_municipality_avg_score(user_info.municipality, user_info.country)
+                update_municipality_score(user_info.municipality, user_info.country)
 
             return redirect('thank_you', user_info_id=user_info.id)
     else:
@@ -181,35 +181,34 @@ def thank_you_view(request, user_info_id):
     user_evaluations = EvaluationSurvey.objects.filter(
         user=user_info,
         municipality=municipality
-    ).order_by('criteria__name')
+    ).order_by('criteria__name').select_related('criteria')
 
     # Lấy điểm cuối cùng hiện tại của thành phố
-    final_scores = MunicipalityMatchingScore.objects.filter(
+    all_municipality_scores = MunicipalityScore.objects.filter(
         municipality=municipality,
         country=user_info.country
     )
-    final_scores_map = {score.criteria_id: score.final_score for score in final_scores}
+    # Tạo một map chứa cả base_score và final_score
+    scores_map = {
+        score.criteria_id: {'final': score.final_score, 'base': score.base_score}
+        for score in all_municipality_scores
+    }
 
     # Kết hợp điểm người dùng và điểm cuối cùng để hiển thị
     score_details = []
     for evaluation in user_evaluations:
-        final_score = final_scores_map.get(evaluation.criteria_id)
-        if final_score is None:
-            # Nếu không có điểm cuối cùng, lấy điểm cơ sở hoặc mặc định là 3.0
-            try:
-                base_score = MunicipalityBaseScore.objects.get(
-                    municipality=municipality,
-                    criteria=evaluation.criteria,
-                    country=user_info.country
-                ).base_score
-                final_score = base_score
-            except MunicipalityBaseScore.DoesNotExist:
-                final_score = 3.0  # Điểm mặc định
+        # Lấy bản ghi điểm tương ứng từ map
+        scores = scores_map.get(evaluation.criteria_id)
+
+        # Logic lấy điểm hiện tại
+        current_score = 0.0
+        if scores:
+            current_score = scores['final'] or scores['base'] or 0.0
 
         score_details.append({
             'criteria_name': evaluation.criteria.name,
             'user_score': evaluation.score,
-            'current_score': round(final_score, 2)
+            'current_score': round(current_score, 2)
         })
 
     # Lấy thông tin từ Wikipedia
@@ -257,7 +256,6 @@ def matching_survey_view(request, user_info_id, target_prefecture_id):
     })
 
 
-
 def matching_results_view(request, user_info_id, target_prefecture_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
 
@@ -301,49 +299,41 @@ def matching_results_view(request, user_info_id, target_prefecture_id):
 # -----------------
 # Functions
 # -----------------
-def update_municipality_avg_score(municipality, country):
-    """Update average scores from user evaluations"""
+def update_municipality_score(municipality, country):
+    """
+    Update avg_score and final_score for a municipality.
+    """
     criteria_list = Criteria.objects.all()
-    for criteria in criteria_list:
-        avg_score = EvaluationSurvey.objects.filter(
-            municipality=municipality, criteria=criteria
-        ).aggregate(Avg('score'))['score__avg'] or 0.0
 
-        MunicipalityMatchingScore.objects.update_or_create(
-            municipality=municipality,
-            criteria=criteria,
-            country=country,
-            defaults={'avg_score': avg_score}
-        )
-    # Update final scores after recalculating averages
-    update_municipality_final_score(municipality, country)
-
-def update_municipality_final_score(municipality, country):
-    criteria_list = Criteria.objects.all()
     for criteria in criteria_list:
         try:
-            base_score_obj = MunicipalityBaseScore.objects.get(municipality=municipality, criteria=criteria, country=country)
-            base_score = base_score_obj.base_score
-        except MunicipalityBaseScore.DoesNotExist:
-            base_score = 3.0
+            # 1. Lấy bản ghi MunicipalityScore đã có
+            score_obj = MunicipalityScore.objects.get(
+                municipality=municipality,
+                criteria=criteria,
+                country=country
+            )
 
-        try:
-            avg_score_obj = MunicipalityMatchingScore.objects.get(municipality=municipality, criteria=criteria, country=country)
-            avg_score = avg_score_obj.avg_score
-        except MunicipalityMatchingScore.DoesNotExist:
-            avg_score = None
+            # 2. Tính avg_score từ EvaluationSurvey
+            avg_score_data = EvaluationSurvey.objects.filter(
+                municipality=municipality,
+                criteria=criteria,
+                user__country=country
+            ).aggregate(Avg('score'))
+            avg_score = avg_score_data['score__avg'] if avg_score_data['score__avg'] is not None else 0.0
 
-        if avg_score is not None:
-            final_score = base_score * 0.6 + avg_score * 0.4
-        else:
-            final_score = base_score
+            # 3. Cập nhật avg_score
+            score_obj.avg_score = avg_score
 
-        MunicipalityMatchingScore.objects.update_or_create(
-            municipality=municipality,
-            criteria=criteria,
-            country=country,
-            defaults={'final_score': final_score}
-        )
+            # 4. Tính final_score dựa trên base_score và avg_score hiện tại
+            final_score = score_obj.base_score * 0.6 + avg_score * 0.4
+            score_obj.final_score = final_score
+
+            # 5. Lưu đối tượng
+            score_obj.save()
+
+        except MunicipalityScore.DoesNotExist:
+            print(f"Record for {municipality} - {criteria} does not exist. Skipping update.")
 
 def calculate_municipality_matching_scores(user_preferences, country, target_prefecture_id):
     """
@@ -360,25 +350,15 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
 
     prefecture_municipalities = Municipality.objects.filter(prefecture_id=target_prefecture_id)
     # 2. Get scores from the database
-    base_scores_qs = MunicipalityBaseScore.objects.filter(
+    municipality_scores_qs = MunicipalityScore.objects.filter(
         criteria__id__in=criteria_ids,
         municipality__in=prefecture_municipalities,
         country=country
     )
-    base_scores_map = {
-        (score.municipality_id, score.criteria_id): score.base_score
-        for score in base_scores_qs
-    }
-
-    matching_scores_qs = MunicipalityMatchingScore.objects.filter(
-        criteria__id__in=criteria_ids,
-        municipality__in=prefecture_municipalities,
-        country=country
-    )
-    matching_scores_map = {
-        (score.municipality_id, score.criteria_id): score.final_score
-        for score in matching_scores_qs
-    }
+    scores_map = {}
+    for score in municipality_scores_qs:
+        key = (score.municipality_id, score.criteria_id)
+        scores_map[key] = score
 
     # 3. Get all municipalities and prefetch related data
     municipalities = prefecture_municipalities.order_by('name')
@@ -400,10 +380,14 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
                 continue
 
             # Calculate using final scores if available, otherwise use base scores
-            score_tuple = (municipality.id, criteria.id)
-            municipality_score = matching_scores_map.get(score_tuple)
-            if municipality_score is None:
-                municipality_score = base_scores_map.get(score_tuple, 3.0)
+            score_key = (municipality.id, criteria.id)
+            score_obj = scores_map.get(score_key)
+
+            # Lấy final_score, nếu không có thì lấy base_score
+            if score_obj:
+                municipality_score = score_obj.final_score or score_obj.base_score
+            else:
+                municipality_score = 3.0  # Điểm mặc định nếu không có dữ liệu
 
             total_weighted_score += municipality_score * rank
             total_weight += rank
@@ -431,7 +415,7 @@ def calculate_municipality_matching_scores(user_preferences, country, target_pre
 def calculate_matching_percentage(score):
     min_score = 1.0  # Minimum score
     max_score = 5.0
-
+    score = max(min_score, min(max_score, score))
     # Calculate percentage based on the score range
     percentage = (max_score - score) / (max_score - min_score) * 100
     return round(percentage, 2)
@@ -479,9 +463,13 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
     if not user_info_id:
         user_info_id = request.session.get('user_info_id')
         if not user_info_id:
-            # If no user ID, just don't show the back button.
-            # No need to redirect, just a cleaner page.
-            pass
+            return redirect('match_info')
+
+    try:
+        user_info = UserInfo.objects.get(id=user_info_id)
+        country = user_info.country
+    except UserInfo.DoesNotExist:
+        return redirect('match_info')
 
     # Fetch user preferences from the session to calculate scores
     preferences_key = f'preferences_{user_info_id}'
@@ -492,29 +480,25 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
         # Fetch scores for this municipality and the user's criteria
         criteria_ids = [int(cid) for cid in user_preferences.values()]
 
-        base_scores = {
-            s.criteria_id: s.base_score
-            for s in MunicipalityBaseScore.objects.filter(
-                municipality=municipality, criteria__id__in=criteria_ids
-            )
-        }
-        matching_scores = {
-            s.criteria_id: s.final_score
-            for s in MunicipalityMatchingScore.objects.filter(
-                municipality=municipality, criteria__id__in=criteria_ids
-            )
-        }
+        scores = MunicipalityScore.objects.filter(
+            municipality=municipality,
+            criteria__id__in=criteria_ids,
+            country=country
+        ).select_related('criteria')
 
         # Iterate through preferences to build the details list
+        scores_map = {s.criteria_id: s for s in scores}
         criteria_map = {c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)}
+
         for rank_str, criteria_id in user_preferences.items():
             rank = int(rank_str)
-            score = matching_scores.get(criteria_id, base_scores.get(criteria_id, 1.0))
-            criteria_details.append({
-                'criteria_name': criteria_map.get(criteria_id, 'N/A'),
-                'priority': rank,
-                'municipality_score': score,
-            })
+            score_obj = scores_map.get(criteria_id)
+            if score_obj:
+                criteria_details.append({
+                    'criteria_name': criteria_map.get(criteria_id, 'N/A'),
+                    'priority': rank,
+                    'municipality_score': score_obj.final_score,
+                })
 
     description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
 
@@ -535,6 +519,7 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
         'image_url': image_url,  # Placeholder image URL
         'wiki_url': wiki_url,  # Placeholder Wikipedia URL
         'municipality_map': municipality_map,  # Folium map HTML
+        'country': country
     })
 
 

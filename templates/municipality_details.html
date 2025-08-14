@@ -9,7 +9,7 @@
         <div class="col-md-10 offset-md-1">
             <h1 class="text-center mb-4">{{ municipality.name }}</h1>
             <p class="text-center text-muted">
-                {% trans "In" %}: {{ prefecture.name }}
+                {% trans "Located in" %}: {{ prefecture.name }}
             </p>
 
             <div class="card mt-4 shadow-sm">
@@ -45,7 +45,13 @@
                     {% endfor %}
                 </ul>
                 <div class="card-footer text-muted">
-                    <small>{% trans "Note: 1.0 indicates a high score, 5.0 indicates a low score." %}</small>
+                    <small>
+                        {% trans "Note: 1.0 indicates a high score, 5.0 indicates a low score." %}
+                        <br>
+                        {% if country %}
+                            {% trans "These scores are specific to" %} {{ country.name }}.
+                        {% endif %}
+                    </small>
                 </div>
             </div>
             {% endif %}

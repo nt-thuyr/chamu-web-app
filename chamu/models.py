@@ -50,11 +50,13 @@ class UserInfo(models.Model):
 # -----------------
 # Score Models
 # -----------------
-class MunicipalityBaseScore(models.Model):
+class MunicipalityScore(models.Model):
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
     base_score = models.FloatField(default=0.0)
+    avg_score = models.FloatField(default=0.0)
+    final_score = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ('municipality', 'country', 'criteria')
@@ -68,16 +70,3 @@ class EvaluationSurvey(models.Model):
     criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
-
-class MunicipalityMatchingScore(models.Model):
-    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
-    avg_score = models.FloatField(default=0.0)
-    final_score = models.FloatField(default=0.0)
-
-    class Meta:
-        unique_together = ('municipality', 'country', 'criteria')
-
-    def __str__(self):
-        return f'{self.municipality.name} - {self.country.name} - {self.criteria.name}'

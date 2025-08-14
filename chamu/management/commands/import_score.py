@@ -2,7 +2,7 @@ import os
 import csv
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from chamu.models import Municipality, Country, Criteria, MunicipalityBaseScore
+from chamu.models import Municipality, Country, Criteria, MunicipalityScore
 
 
 def normalize_score(raw_value, min_value, max_value, is_reverse=False):
@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 # Vòng lặp qua tất cả các quốc gia đã lấy từ database
                 for country in countries:
                     all_score_objects.append(
-                        MunicipalityBaseScore(
+                        MunicipalityScore(
                             municipality=municipality_map[item['municipality_name']],
                             country=country,
                             criteria=criteria_map[item['criteria_name']],
@@ -121,7 +121,7 @@ class Command(BaseCommand):
 
         if all_score_objects:
             with transaction.atomic():
-                MunicipalityBaseScore.objects.bulk_create(all_score_objects, ignore_conflicts=True)
+                MunicipalityScore.objects.bulk_create(all_score_objects, ignore_conflicts=True)
             self.stdout.write(self.style.SUCCESS(f'Đã tạo mới {len(all_score_objects)} bản ghi điểm số.'))
 
         self.stdout.write(self.style.SUCCESS('Hoàn thành việc nhập và chuẩn hóa điểm từ file.'))

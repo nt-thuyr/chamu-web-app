@@ -1,17 +1,14 @@
 from django.contrib import admin
 from .models import (
     Prefecture, Municipality, Country, UserInfo, Criteria,
-    EvaluationSurvey, MunicipalityBaseScore, MunicipalityMatchingScore
+    EvaluationSurvey, MunicipalityScore
 )
 
 # Inlines để quản lý dữ liệu liên quan ngay trong trang cha
-class MunicipalityBaseScoreInline(admin.TabularInline):
-    model = MunicipalityBaseScore
+class MunicipalityScoreInline(admin.TabularInline):
+    model = MunicipalityScore
     extra = 1
 
-class MunicipalityMatchingScoreInline(admin.TabularInline):
-    model = MunicipalityMatchingScore
-    extra = 1
 
 class MunicipalityInline(admin.TabularInline):
     model = Municipality
@@ -29,7 +26,7 @@ class MunicipalityAdmin(admin.ModelAdmin):
     list_display = ('name', 'prefecture',)
     list_filter = ('prefecture',)
     search_fields = ('name',)
-    inlines = [MunicipalityBaseScoreInline]
+    inlines = [MunicipalityScoreInline]
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
@@ -53,13 +50,8 @@ class EvaluationSurveyAdmin(admin.ModelAdmin):
     list_filter = ('municipality', 'criteria', 'user__country',)
     search_fields = ('user__name',)
 
-@admin.register(MunicipalityMatchingScore)
-class MunicipalityMatchingScoreAdmin(admin.ModelAdmin):
-    list_display = ('municipality', 'country', 'criteria', 'avg_score', 'final_score',)
+@admin.register(MunicipalityScore)
+class MunicipalityScoreAdmin(admin.ModelAdmin):
+    list_display = ('municipality', 'country', 'criteria', 'base_score', 'avg_score', 'final_score',)
     list_filter = ('municipality', 'country', 'criteria',)
     search_fields = ('municipality__name', 'country__name',)
-
-@admin.register(MunicipalityBaseScore)
-class MunicipalityBaseScoreAdmin(admin.ModelAdmin):
-    list_display = ('municipality', 'criteria', 'base_score',)
-    list_filter = ('municipality', 'criteria',)
