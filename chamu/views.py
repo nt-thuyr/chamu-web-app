@@ -9,13 +9,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 import wikipedia, folium, geopy, geopy.distance, re
 from django.views.decorators.http import require_GET
-
+from django.contrib.auth.hashers import check_password
 from .forms import (
     BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityScore, EvaluationSurvey, Prefecture
+    MunicipalityScore, EvaluationSurvey, Prefecture, Country
 )
 
 # -----------------
@@ -52,28 +52,49 @@ def ajax_login(request):
     return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
 
 def ajax_logout(request):
-    if request.user.is_authenticated:
-        logout(request)
-    return JsonResponse({"success": True})
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            logout(request)
+        return JsonResponse({"success": True})
+    else:
+        return JsonResponse({"success": False}, status=405)
 
 def ajax_signup(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
         password2 = request.POST.get("password2")
+        country_id = request.POST.get("country")
+        prefecture_id = request.POST.get("prefecture")
+        municipality_id = request.POST.get("municipality")
+        errors = []
         # Kiểm tra username trùng
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"success": False, "error": "Tên đăng nhập đã tồn tại."})
+            errors.append("Username already exists.")
         # Kiểm tra mật khẩu nhập lại
         if password != password2:
-            return JsonResponse({"success": False, "error": "Mật khẩu nhập lại không khớp."})
-        # Kiểm tra độ dài mật khẩu
+            errors.append("Passwords do not match.")
         if len(password) < 6:
-            return JsonResponse({"success": False, "error": "Mật khẩu phải có ít nhất 6 ký tự."})
+            errors.append("Your password must have at least 6 characters.")
         # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
+        if not country_id or not prefecture_id or not municipality_id:
+            errors.append("You must select country, prefecture and municipality.")
 
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
         user = User.objects.create_user(username=username, password=password)
         user.save()
+
+        # Lưu UserInfo
+        country = Country.objects.filter(id=country_id).first()
+        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
+        municipality = Municipality.objects.filter(id=municipality_id).first()
+        UserInfo.objects.create(
+            user=user,
+            name=username,
+            country=country,
+            municipality=municipality
+        )
         # Đăng nhập luôn
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -81,31 +102,72 @@ def ajax_signup(request):
         return JsonResponse({"success": True})
     return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
 
+
 @login_required
 def ajax_update(request):
     if request.method == "POST":
-        current_password = request.POST.get("current_password")
-        new_username = request.POST.get("username")
-        new_password = request.POST.get("password")
+        user = request.user
+        new_username = request.POST.get("username", "").strip()
+        new_password = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
+        prefecture_id = request.POST.get("prefecture")
+        municipality_id = request.POST.get("municipality")
+        errors = []
 
-        user = authenticate(request, username=request.user.username, password=current_password)
-        if not user:
-            return JsonResponse({"success": False, "error": "Current password is incorrect"})
+        # 1. Kiểm tra đủ trường
+        if not new_username or not new_password or not password2 or not prefecture_id or not municipality_id:
+            errors.append("Please fill in all fields.")
 
-        if new_username:
+        # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
+        if new_username != user.username:
+            if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+                errors.append("Username already exists.")
+            if len(new_username) < 1:
+                errors.append("Username cannot be empty.")
+
+        # 3. Kiểm tra password
+        if len(new_password) < 6:
+            errors.append("Your password must have at least 6 characters.")
+
+        # 4. Kiểm tra nhập lại mật khẩu
+        if new_password != password2:
+            errors.append("Passwords do not match.")
+
+        # 5. Nếu có lỗi thì trả về luôn
+        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
+        municipality = Municipality.objects.filter(id=municipality_id).first()
+        if not prefecture or not municipality:
+            errors.append("Invalid prefecture or municipality.")
+
+        if errors:
+            return JsonResponse({"success": False, "errors": errors})
+
+        # 6. Update nếu hợp lệ
+        changed = False
+        if new_username != user.username:
             user.username = new_username
-        if new_password:
+            changed = True
+        if new_password and not check_password(new_password, user.password):
             user.set_password(new_password)
-        user.save()
+            changed = True
 
-        # Login lại nếu đổi password
-        if new_password:
-            user = authenticate(request, username=user.username, password=new_password)
-            if user:
-                login(request, user)
+        try:
+            userinfo = user.userinfo
+            userinfo.prefecture = prefecture
+            userinfo.municipality = municipality
+            userinfo.save()
+            changed = True
+        except Exception:
+            pass
 
-        return JsonResponse({"success": True, "username": user.username})
-    return None
+        if changed:
+            user.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            return JsonResponse({"success": True, "changed": True, "username": user.username})
+        else:
+            return JsonResponse({"success": True, "changed": False})
+    return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
 
 def about_view(request):
     """About page view"""
@@ -526,7 +588,6 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
         'image_url': image_url,  # Placeholder image URL
         'wiki_url': wiki_url,  # Placeholder Wikipedia URL
         'municipality_map': municipality_map,  # Folium map HTML
-        'country': country
     })
 
 def get_municipality_info_from_wiki(municipality_name, prefecture_name):
