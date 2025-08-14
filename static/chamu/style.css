@@ -1,5 +1,5 @@
 body {
-    font-family: "Libertinus Serif", serif; /* Thêm font dự phòng */
+    font-family: "Noto Serif JP", Serif;
     font-weight: 400;
     font-style: normal;
     min-height: 100vh;
@@ -120,7 +120,6 @@ footer {
     background-position: center;
     background-repeat: no-repeat;
     z-index: -1;
-
 }
 
 .bg_test-img {
@@ -320,6 +319,17 @@ table {
     to {
         width: 120px;
     }
+}
+
+h1{
+    text-align: center;
+    font-size: 55px;
+    font-weight: bold;
+    margin-bottom: 50px;
+    color: #000000 !important;
+    text-shadow: 0 2px 8px #fff, 0 1px 0 #ccc;
+    position: relative;
+    animation: fadeInDown 1s ease-out forwards;
 }
 
 button[type="submit"] {
