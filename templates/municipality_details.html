@@ -29,19 +29,20 @@
         <div class="row">
             <div class="col-md-10 offset-md-1">
                 <h1 class="text-center mb-4">{{ municipality.name }}</h1>
-                <p class="text-center text-muted">
-                    {% trans "Located in" %}: {{ prefecture.name }}
+               <p class="text-center text-muted" style="font-size: 2rem; font-weight: bold;">
+                    in {{ prefecture.name }}
                 </p>
+
 
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-primary text-white">
-                        <i class="fas fa-info-circle me-2"></i>{% trans "Description" %}
+                        <i class="fas fa-info-circle me-2"></i>{% trans "説明" %}
                     </div>
                     <div class="card-body">
                         <p>{{ municipality_description }}</p>
                         {% if wiki_url %}
                             <a href="{{ wiki_url }}" class="btn btn-link px-0" target="_blank">
-                                <i class="fab fa-wikipedia-w me-1"></i>{% trans "Read more on Wikipedia" %}
+                                <i class="fab fa-wikipedia-w me-1"></i>{% trans "Wikipedia" %}
                             </a>
                         {% endif %}
                     </div>
@@ -50,7 +51,7 @@
                 {% if criteria_details %}
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-success text-white">
-                        <i class="fas fa-star me-2"></i>{% trans "Municipality Scores by Criteria" %}
+                        <i class="fas fa-star me-2"></i>{% trans "理想としている項目別スコア" %}
                     </div>
                     <ul class="list-group list-group-flush">
                         {% for detail in criteria_details %}
@@ -67,11 +68,12 @@
                     </ul>
                     <div class="card-footer text-muted">
                         <small>
-                            {% trans "Note: 1.0 indicates a high score, 5.0 indicates a low score." %}
+                            {% trans "注：1.0は高得点、5.0は低得点" %}
                             <br>
                             {% if country %}
-                                {% trans "These scores are specific to" %} {{ country.name }}.
+                                これらのスコアは {{ country.name }}を選択したユーザを基にしています。
                             {% endif %}
+                            </br>
                         </small>
                     </div>
                 </div>
