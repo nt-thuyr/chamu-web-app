@@ -8,8 +8,25 @@
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,700" rel="stylesheet">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-    body {
-        font-family: 'Roboto', Arial, sans-serif;
+    nav {
+        position: relative;
+        z-index: 2; 
+    }
+    body, .content-on-blur, label, h3, h1, h2, p, .btn {
+        font-family: 'Libertinus Serif' !important;
+    }
+    .bg-blur {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        filter: blur(2px);
+        z-index: 0;
+        opacity: 0.6;
+    }
+    .content-on-blur {
+        position: relative;
+        z-index: 1;
     }
     .wrapper.img {
         background-image: url('{% static 'chamu/img.jpg' %}');
@@ -24,11 +41,6 @@
         border-radius: 20px;
         box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
     }
-    .form-control, .form-select {
-        border-radius: 10px;
-        min-height: 48px;
-        font-size: 1.1rem;
-    }
     .btn-primary {
         padding: 12px 40px;
         border-radius: 50px;
@@ -37,76 +49,76 @@
         letter-spacing: 1px;
     }
 </style>
-<section class="ftco-section py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="wrapper img" >
-                    <div class="row">
-                        <div class="col-md-9 col-lg-7">
-                            <div class="contact-wrap w-100 p-md-5 p-4">
-                                <h3 class="mb-4 text-center" style="color:#000 !important; background:#fff !important;">Rating your neighborhood</h3>
-                                <div id="form-message-warning" class="mb-4"></div>
-                                <div id="form-message-success" class="mb-4" style="display:none;">
-                                    {% trans "Your message was sent, thank you!" %}
-                                </div>
-                                <form method="post" id="evaluate-info-form" autocomplete="off">
-                                    {% csrf_token %}
-                                    {% if form.non_field_errors %}
-                                        <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
-                                    {% endif %}
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-                                                {{ form.name|add_class:'form-control' }}
-                                                {% if form.name.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.country.id_for_label }}" style="margin-left: 10px;">{{ form.country.label }}</label>
-                                                {{ form.country|add_class:'form-select' }}
-                                                {% if form.country.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.current_prefecture.id_for_label }}" style ="margin-left: 120px;">{{ form.current_prefecture.label }}</label>
-                                                {{ form.current_prefecture|add_class:'form-select' }}
-                                                {% if form.current_prefecture.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.current_prefecture.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.municipality.id_for_label }}" style="margin-left: 125px;">{{ form.municipality.label }}</label>
-                                                {{ form.municipality|add_class:'form-select' }}
-                                                {% if form.municipality.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.municipality.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mt-4 mb-0 text-center">
-                                                <button type="submit" class="btn btn-primary">{% trans "Start Survey" %}</button>
-                                            </div>
+
+<div class="bg-blur"></div>
+<div class="content-on-blur">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="wrapper img" >
+                <div class="row">
+                    <div class="col-md-9 col-lg-7">
+                        <div class="contact-wrap w-100 p-md-5 p-4">
+                            <h3 class="mb-4 text-center" style="color:#000 !important; background:#fff !important;">Rating your neighborhood</h3>
+                            <div id="form-message-warning" class="mb-4"></div>
+                            <div id="form-message-success" class="mb-4" style="display:none;">
+                                {% trans "Your message was sent, thank you!" %}
+                            </div>
+                            <form method="post" id="evaluate-info-form" autocomplete="off">
+                                {% csrf_token %}
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label class="label fw-semibold" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                                            {{ form.name|add_class:'form-control' }}
+                                            {% if form.name.errors %}
+                                                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                                            {% endif %}
                                         </div>
                                     </div>
-                                </form>
-                            </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label class="label fw-semibold" for="{{ form.country.id_for_label }}" style="margin-left: 10px;">{{ form.country.label }}</label>
+                                            {{ form.country|add_class:'form-select' }}
+                                            {% if form.country.errors %}
+                                                <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label class="label fw-semibold" for="{{ form.current_prefecture.id_for_label }}" style ="margin-left: 120px;">{{ form.current_prefecture.label }}</label>
+                                            {{ form.current_prefecture|add_class:'form-select' }}
+                                            {% if form.current_prefecture.errors %}
+                                                <div class="text-danger small mt-1">{{ form.current_prefecture.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label class="label fw-semibold" for="{{ form.municipality.id_for_label }}" style="margin-left: 125px;">{{ form.municipality.label }}</label>
+                                            {{ form.municipality|add_class:'form-select' }}
+                                            {% if form.municipality.errors %}
+                                                <div class="text-danger small mt-1">{{ form.municipality.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group mt-4 mb-0 text-center">
+                                            <button type="submit" class="btn btn-primary">{% trans "Start Survey" %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block extra_js %}

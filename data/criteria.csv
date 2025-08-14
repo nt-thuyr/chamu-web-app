@@ -4,3 +4,9 @@ Population Density,Low,High
 Crime Index,Low,High
 Expat Shop Access,Limited,Abundant,true
 Temperature Variation,Mild,Extreme
+
+Cost of Living,価格,低い,高い
+Population Density,混雑度,低い,高い
+Crime Index,安全面,安全,危険
+Expat Shop,選択した国の飲食店,少ない,多い
+Temperature Variation,気温の変化,穏やか,極端

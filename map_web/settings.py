@@ -137,6 +137,12 @@ LANGUAGES = [
     ('ja', 'Japanese'),
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'http://127.0.0.1',
+    'http://localhost',
+]
+
 # Cấu hình Celery Broker và Backend
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'

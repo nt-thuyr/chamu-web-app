@@ -10,7 +10,23 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
     body {
-        font-family: 'Roboto', Arial, sans-serif;
+        font-family: "Libertinus Serif";
+        font-weight: 400;
+        font-style: normal;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        opacity: 0.6; /* 透明度を調整 */
+        z-index: -1;
+        pointer-events: none;
     }
     .wrapper.img {
         background-image: url('{% static 'chamu/img.jpg' %}');
@@ -24,11 +40,6 @@
         background: rgba(255,255,255,0.95);
         border-radius: 20px;
         box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
-    }
-    .form-control, .form-select {
-        border-radius: 10px;
-        min-height: 48px;
-        font-size: 1.1rem;
     }
     .btn-primary {
         padding: 12px 40px;

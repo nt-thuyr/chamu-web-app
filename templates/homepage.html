@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
+<script src="{% static 'chamu/home_trans.js' %}"></script>
 <div class="bg_test">
+      <img src="{% static 'chamu/sakura.jpg' %}" class="bg_test-img img1">
+      <img src="{% static 'chamu/hanabi.jpg' %}" class="bg_test-img img2">
+      <img src="{% static 'chamu/ityou.jpg' %}" class="bg_test-img img3">
+      <img src="{% static 'chamu/yuki.jpg' %}" class="bg_test-img img4">
+      <div class="bg_test-overlay"></div>
 </div>
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">

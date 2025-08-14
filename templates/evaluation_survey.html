@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}Evaluation Survey{% endblock %}
 
 {% block content %}
+<style>
+    body {
+        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+    }
+</style>
+
 <h2>Rate your municipality</h2>
 
 <form method="post">

@@ -6,7 +6,7 @@ h3 {
 }
 
 body {
-    font-family: "Libertinus Serif", serif;
+    font-family: "Libertinus Serif";
     font-weight: 400;
     font-style: normal;
     min-height: 100vh;
@@ -32,16 +32,48 @@ label,
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url(桜.jpg);
+    width: 100vw;
+    height: 100vh;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     z-index: -1;
-    opacity: 0.5;
+  
 }
 
+.bg_test-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 2s;
+    z-index: 0;
+}
+
+.bg_test-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,0.5); 
+    z-index: 1;
+    pointer-events: none;
+}
+
+.bg_test-img.img1 { animation-delay: 0s; }
+.bg_test-img.img2 { animation-delay: 7s; }
+.bg_test-img.img3 { animation-delay: 14s; }
+.bg_test-img.img4 { animation-delay: 21s; }
+
+@keyframes bgFade {
+    0% { opacity: 1; }
+    15% { opacity: 1; }
+    35% { opacity: 0; }
+    100% { opacity: 0; }
+}
 .bg_test-text {
     border: solid 1px;
     display: inline-block;
@@ -117,6 +149,10 @@ label,
 }
 
 .mb-3 label {
+    white-space: nowrap;
+}
+
+.mb-4 label {
     white-space: nowrap;
 }
 
@@ -242,7 +278,7 @@ h2 {
     font-size: 55px;
     font-weight: bold;
     margin-bottom: 50px;
-    background: linear-gradient(90deg, #B5B5B5, #5F5F5F);
+    background: linear-gradient(90deg, #000000, #5F5F5F);
     /* オレンジ系グラデ */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
