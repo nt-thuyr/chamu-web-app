@@ -2,11 +2,13 @@
 {% load i18n %}
 {% load static %}
 
+{% block title %}{% trans "About" %} {{ municipality.name }}{% endblock %}
+
 {% block content %}
-    <style>
+<style>
     nav {
-    position: relative;
-    z-index: 2; /* .bg-blur より高くする */
+        position: relative;
+        z-index: 2;
     }
 
     .bg-blur {
@@ -22,17 +24,32 @@
         position: relative;
         z-index: 1;
     }
+    .text-muted {
+        font-size: medium;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+    p {
+        margin-top: 20px;
+        margin-bottom: 0;
+        color: #000000;
+        font-size: larger;
+    }
+    .list-group-item:last-child {
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
 </style>
 <div class="bg-blur"></div>
 <div class="content-on-blur">
     <div class="container mt-5">
         <h1 class="text-center mb-4">{{ target_prefecture.name }}</h1>
-        <h2 class="text-center mb-4">{% trans "Matching Municipality Ranking Results" %}</h2>
-        <p>{% trans "Based on your preferences, here are the ranked municipalities:" %}</p>
+        <h2 class="text-center mb-4">{% trans "理想的な市区町村ランキング" %}</h2>
+        
 
         <div class="card mb-4">
             <div class="card-header">
-                {% trans "Your Preferences (priority 1 is highest)" %}
+                {% trans "あなたが理想としている項目ランキング" %}
             </div>
             <ul class="list-group list-group-flush">
                 {% for item in user_preferences %}
@@ -43,14 +60,18 @@
                 {% endfor %}
             </ul>
         </div>
-
+        <p style="margin-bottom: 0;">{% trans "あなたの理想に基づいてランキングされた市区町村は以下の通り：" %}</p>
+        <small class="text-muted">
+            これらのスコアは {{ user_info.country.name }} を選択したユーザーを基にしています。
+        </small>
+    
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">{% trans "Municipality" %}</th>
-                    <th scope="col">{% trans "Matching Percentage" %}</th>
-                    <th scope="col">{% trans "Details" %}</th>
+                    <th scope="col">{% trans "市区町村" %}</th>
+                    <th scope="col">{% trans "マッチ度" %}</th>
+                    <th scope="col">{% trans "詳細" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,21 +87,21 @@
                             <strong>{{ result.percentage }}%</strong>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" aria-expanded="false" aria-controls="details-{{ forloop.counter }}">{% trans "View Details" %}</button>
+                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" data-bs-target="#details-{{ forloop.counter }}" aria-expanded="false" aria-controls="details-{{ forloop.counter }}">{% trans "詳細を見る" %}</button>
                         </td>
                     </tr>
                 <tr class="collapse" id="details-{{ forloop.counter }}">
                     <td colspan="4">
                         <div class="p-3 bg-light">
                             <p class="text-muted">
-                                {% trans "Note: A score of 1.0 is the best possible index, while 5.0 is the worst. Lower scores are more favorable. " %}
+                                {% trans "注：1.0は高得点、5.0は低得点" %}
                             </p>
-                            <h6>{% trans "Detailed scores by criteria:" %}</h6>
+                            <h6>{% trans "項目別の詳細スコア" %}</h6>
                             <ul class="list-unstyled">
                                 {% for detail in result.criteria_details %}
                                     <li>
-                                        <strong>{{ detail.criteria_name }} (Priority {{ detail.priority }}):</strong>
-                                        {% trans "Municipality score" %}: {{ detail.municipality_score|floatformat:2 }}
+                                        <strong>{{ detail.criteria_name }} (マッチ度 {{ detail.priority }}):</strong>
+                                        {% trans "市区町村スコア" %}: {{ detail.municipality_score|floatformat:2 }}
                                     </li>
                                 {% endfor %}
                             </ul>

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'widget_tweaks',   # for customizing form widgets in templates
+    'widget_tweaks',  # for custom form widgets
     'chamu',  # name of app
 ]
 

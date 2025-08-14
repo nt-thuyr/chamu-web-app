@@ -15,7 +15,7 @@
 </div>
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <h2 class="mb-4 text-center">Where's next, JAPAN?</h2>
+        <h2 class="mb-4 text-center">住みたい 日本ナビ</h2>
         <form id="main-info-form" method="post" novalidate>
             {% csrf_token %}
             {{ formset.management_form }}
@@ -23,8 +23,8 @@
             <input type="hidden" name="next_action" id="next_action_input" value="">
             {{ form.as_p }}
             <div class="d-flex justify-content-center gap-3">
-                <button type="button" id="start-matching-btn" class="btn btn-outline-primary">Start Matching Survey</button>
-                <button type="button" id="start-evaluation-btn" class="btn btn-outline-primary">Start Evaluation Survey</button>
+                <button type="button" id="start-matching-btn" class="btn btn-outline-primary">次に住む地域探し</button>
+                <button type="button" id="start-evaluation-btn" class="btn btn-outline-primary">住んでいる地域の評価</button>
             </div>
         </form>
     </div>

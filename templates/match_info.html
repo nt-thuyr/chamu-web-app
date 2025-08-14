@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% load i18n %}
 {% load widget_tweaks %}
+{% load i18n %}
 {% load static %}
 
 {% block title %}Information{% endblock %}
@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
-    /* ------------------- CSS ĐÃ CHỈNH SỬA VÀ TỐI ƯU HÓA ------------------- */
     nav {
         position: relative;
         z-index: 2;
@@ -55,25 +54,6 @@
     .contact-wrap form {
         display: flex;
         flex-direction: column;
-    }
-
-    h3.mb-4 {
-        text-align: center;
-        background: none !important;
-        color: #000 !important;
-        padding-bottom: 0.5rem;
-        position: relative;
-        font-weight: 700;
-        font-size: 2rem;
-    }
-
-    h3.mb-4::after {
-        content: '';
-        display: block;
-        width: 50px;
-        height: 3px;
-        background-color: #1976d2;
-        margin: 10px auto 0;
     }
 
     .form-group {
