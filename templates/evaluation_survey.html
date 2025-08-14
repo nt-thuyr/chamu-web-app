@@ -12,27 +12,6 @@
         background-size: cover;
     }
 
-    /* Tiêu đề chính */
-    .evaluation-h2 {
-        text-align: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-top: 50px;
-        margin-bottom: 30px;
-        color: #000;
-        position: relative;
-    }
-
-    .evaluation-h2::after {
-        content: "";
-        display: block;
-        width: 60px;
-        height: 3px;
-        background: #1976d2;
-        margin: 10px auto 0;
-        border-radius: 20px;
-    }
-
     /* Khối form và bảng */
     .evaluation-container {
         max-width: 900px;
@@ -176,15 +155,17 @@
 </style>
 
 <div class="container evaluation-container">
-    <h2 class="evaluation-h2">{% trans "Rate your municipality" %}</h2>
+    <h2 class="fw-bold" style="color: #2c3e50;">
+        {% trans "自身の市区町村を評価しよう！" %}
+    </h2>
     <form method="post">
         {% csrf_token %}
         {{ formset.management_form }}
         <table class="evaluation-table">
             <thead>
                 <tr>
-                    <th>{% trans "Criteria" %}</th>
-                    <th colspan="5">{% trans "How do you think?" %}</th>
+                    <th>{% trans "項目" %}</th>
+                    <th colspan="5">{% trans "１から５でそれぞれ評価" %}</th>
                 </tr>
             </thead>
             <tbody>

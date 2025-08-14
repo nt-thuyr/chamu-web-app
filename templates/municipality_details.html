@@ -73,7 +73,7 @@
                             {% if country %}
                                 これらのスコアは {{ country.name }}を選択したユーザを基にしています。
                             {% endif %}
-                            </br>
+                            <br>
                         </small>
                     </div>
                 </div>
@@ -81,7 +81,7 @@
 
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-info text-white">
-                        <i class="fas fa-map-marker-alt me-2"></i>{% trans "Location & Image" %}
+                        <i class="fas fa-map-marker-alt me-2"></i>{% trans "場所 & イメージ写真" %}
                     </div>
                     <div class="card-body text-center">
                         {{ municipality_map|safe }}
@@ -93,9 +93,12 @@
                 <div class="text-center mt-4 mb-5">
                     {% if user_info_id %}
                     <a href="{% url 'matching_results' user_info_id=user_info_id target_prefecture_id=prefecture.id %}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-arrow-left me-2"></i>{% trans "Back to matching result page" %}
+                        <i class="fas fa-arrow-left me-2"></i>{% trans "一つ前のページに戻る" %}
                     </a>
                     {% endif %}
+                    <a href="{% url 'evaluate_info' %}" class="btn btn-primary btn-sm mx-2">
+                        <i class="fas fa-hand-holding-heart me-2"></i>{% trans "Contribute to us" %}
+                    </a>
                 </div>
             </div>
         </div>
