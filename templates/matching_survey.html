@@ -1,34 +1,62 @@
 {% extends 'base.html' %}
 {% load i18n %}
-
+{% load static %}
 {% block title %}{% trans "Matching Survey" %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <h2 class="mb-4 text-center">{% trans "Finding Your Dream Living Area" %}</h2>
-        <p class="mb-3 text-center">{% trans "Please rank the criteria according to your priority (1 = Highest)." %}</p>
-
-        <div id="alert-container"></div>
-
-        <form method="post" id="survey-form" novalidate>
-            {% csrf_token %}
-            {% for rank in ranks %}
-                <div class="mb-3">
-                    <label for="rank_{{ rank }}" class="form-label">Rank {{ rank }}:</label>
-                    <select class="form-select" id="rank_{{ rank }}" name="rank_{{ rank }}" required>
-                        <option value="">--- {% trans "Select a criteria" %} ---</option>
-                        {% for criteria in criteria_list %}
-                            <option value="{{ criteria.id }}">{{ criteria.name }}</option>
-                        {% endfor %}
-                    </select>
+<style>
+    .bg-blur {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        filter: blur(2px);
+        z-index: 0;
+    }
+    .content-on-blur {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+<div class="bg-blur"></div>
+<div class="content-on-blur">
+    <div class="row justify-content-center ">
+        <div class="col-md-8 col-lg-6">
+            <!-- Card container -->
+            <div class="card shadow-lg  rounded-4 p-4" style="background-color: #ffffff; border: 2px solid #77b6e0ff; border-radius: 10px; padding: 20px;">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold" style="color: #2c3e50;">
+                        <i class="bi bi-house-heart-fill text-primary me-2"></i>
+                        {% trans "Finding Your Dream Living Area" %}
+                    </h2>
+                    <p class="text-muted">
+                        {% trans "Please rank the criteria according to your priority (1 = Highest)." %}
+                    </p>
                 </div>
-            {% endfor %}
-
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary" id="submit-button">{% trans "Submit Matching Survey" %}</button>
+                <div id="alert-container"></div>
+                <form method="post" id="survey-form" novalidate>
+                    {% csrf_token %}
+                    {% for rank in ranks %}
+                        <div class="mb-3">
+                            <label for="rank_{{ rank }}" class="form-label fw-semibold">
+                                Rank {{ rank }}:
+                            </label>
+                            <select class="form-select shadow-sm" id="rank_{{ rank }}" name="rank_{{ rank }}" required>
+                                <option value="">--- {% trans "Select a criteria" %} ---</option>
+                                {% for criteria in criteria_list %}
+                                    <option value="{{ criteria.id }}">{{ criteria.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endfor %}
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm" id="submit-button">
+                            <i class="bi bi-check-circle-fill me-2"></i> {% trans "Submit Matching Survey" %}
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

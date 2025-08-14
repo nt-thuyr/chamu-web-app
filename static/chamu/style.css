@@ -1,14 +1,21 @@
+h3 {
+    color: #000 !important;
+    background: #fff !important;
+    padding: 10px 0 !important;
+    text-shadow: none !important;
+}
+
 body {
     font-family: "Libertinus Serif", serif;
     font-weight: 400;
     font-style: normal;
-    min-height: 100vh; 
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .navbar {
-  background-color: #2b5273 !important;
+    background-color: #2b5273 !important;
 }
 
 footer {
@@ -22,70 +29,76 @@ label,
 }
 
 .bg_test {
-    position: fixed; 
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url(桜.jpg); 
-    background-size: cover; 
-    background-position: center; 
+    background-image: url(桜.jpg);
+    background-size: cover;
+    background-position: center;
     background-repeat: no-repeat;
-    z-index: -1; 
+    z-index: -1;
     opacity: 0.5;
 }
 
 .bg_test-text {
-    border:  solid 1px;                             
-    display:  inline-block;                         
-    padding: 10px 20px;                             
-    background-color: rgba(255, 255, 255, 0.7);    
+    border: solid 1px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: rgba(255, 255, 255, 0.7);
 }
+
 .bg_test {
-    text-align:  center;    
-    padding:  150px;        
-    border: solid 2px;      
+    text-align: center;
+    padding: 150px;
+    border: solid 2px;
 }
 
 .btn-outline-primary {
     margin-top: 40px;
     display: flex;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 10px; 
-  padding: 10px 40px;
-  white-space: pre-wrap;
-  border-radius: 50px;
-  color: #fff;
-  border: 2px solid #909eac;
-  background-color: #4e4e4e;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 10px;
+    padding: 10px 40px;
+    white-space: pre-wrap;
+    border-radius: 50px;
+    color: #fff;
+    border: 2px solid #909eac;
+    background-color: #4e4e4e;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .btn-outline-primary:hover {
-  background-color: #89beff; 
-  border-color: #78b5ff;
-  color: #fff;
-  transform: translateY(-3px); 
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); 
+    background-color: #89beff;
+    border-color: #78b5ff;
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
+
 /**/
 .card {
     border: none;
-    border-radius: 15px; /* 角をより丸くする */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* より立体的なシャドウ */
- 
+    border-radius: 15px;
+    /* 角をより丸くする */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    /* より立体的なシャドウ */
+
 }
 
 .card:hover {
-    transform: translateY(-5px); /* ホバー時に少し浮き上がるアニメーション */
+    transform: translateY(-5px);
+    /* ホバー時に少し浮き上がるアニメーション */
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* Cardヘッダーのスタイルを変更 */
 .card-header {
-    background-image: linear-gradient(135deg, #2b5273 0%, #4e738b 100%); /* グラデーション背景 */
+    background-image: linear-gradient(135deg, #2b5273 0%, #4e738b 100%);
+    /* グラデーション背景 */
     color: #fff;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
@@ -104,17 +117,22 @@ label,
 }
 
 .mb-3 label {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 .mb-2 label {
-  display: flex;
-  justify-content: flex-start; /* 左寄せ */
-  align-items: center;         /* 垂直方向は中央のまま */
-  width: 150px;           /* 横幅を広げる */
-  height: px;          /* 縦幅を小さくする */
-  border-radius: 50%;     /* 50%にすると楕円形になる */
-  background-color: white;
+    display: flex;
+    justify-content: flex-start;
+    /* 左寄せ */
+    align-items: center;
+    /* 垂直方向は中央のまま */
+    width: 150px;
+    /* 横幅を広げる */
+    height: px;
+    /* 縦幅を小さくする */
+    border-radius: 50%;
+    /* 50%にすると楕円形になる */
+    background-color: white;
 }
 
 /* ボタンのスタイルを変更 */
@@ -133,7 +151,8 @@ label,
 }
 
 .btn-primary:hover {
-    background-position: right center; /* ホバー時にグラデーションが移動する */
+    background-position: right center;
+    /* ホバー時にグラデーションが移動する */
     color: #fff;
     text-decoration: none;
     transform: translateY(-3px);
@@ -169,6 +188,7 @@ label,
 input[type="radio"] {
     display: none;
 }
+
 label {
     display: flex;
     justify-content: center;
@@ -184,15 +204,17 @@ label {
     box-shadow: 1 1px 10px rgba(0, 0, 0, 0.2);
     letter-spacing: 2px;
 }
+
 table {
     border-collapse: collapse;
     width: 100%;
     background: linear-gradient(145deg, #FFFFFF, #F5F5F5);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 45px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 45px rgba(0, 0, 0, 0.4);
     transition: all 0.3s ease;
 }
+
 label:hover {
     background-color: #EEF1F4;
     border-color: #DCDCDC;
@@ -201,30 +223,33 @@ label:hover {
 }
 
 .btn-outline-primary:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2); 
-  background-color: #5a6268; 
-  border-color: #5a6268;
+    transform: translateY(0);
+    box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2);
+    background-color: #5a6268;
+    border-color: #5a6268;
 }
 
-input[type="radio"]:checked + label {
+input[type="radio"]:checked+label {
     background-color: #808080;
     color: #fff;
     border-color: #808080;
     box-shadow: 0 6px 12px rgba(2, 2, 2, 0.5);
     transform: translateY(-5px) scale(1.01);
 }
+
 h2 {
     text-align: center;
     font-size: 55px;
     font-weight: bold;
     margin-bottom: 50px;
-    background: linear-gradient(90deg, #B5B5B5, #5F5F5F); /* オレンジ系グラデ */
+    background: linear-gradient(90deg, #B5B5B5, #5F5F5F);
+    /* オレンジ系グラデ */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     position: relative;
     animation: fadeInDown 1s ease-out forwards;
 }
+
 h2::after {
     content: "";
     display: block;
@@ -242,10 +267,22 @@ h3 {
     font-size: 55px;
     font-weight: bold;
     margin-bottom: 50px;
-    color: #FFFFFF;
+    color: #1976d2;
     position: relative;
     animation: fadeInDown 1s ease-out forwards;
 }
+
+h3 {
+    text-align: center;
+    font-size: 55px;
+    font-weight: bold;
+    margin-bottom: 50px;
+    color: #1976d2 !important;
+    text-shadow: 0 2px 8px #fff, 0 1px 0 #ccc;
+    position: relative;
+    animation: fadeInDown 1s ease-out forwards;
+}
+
 h3::after {
     content: "";
     display: block;
@@ -257,21 +294,25 @@ h3::after {
     animation: expandBar 0.8s ease-out forwards;
     animation-delay: 0.5s;
 }
+
 @keyframes fadeInDown {
     0% {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0);
     }
 }
+
 @keyframes expandBar {
     to {
         width: 120px;
     }
 }
+
 button[type="submit"] {
     display: block;
     margin: 0 auto;
@@ -279,41 +320,50 @@ button[type="submit"] {
     background-color: #000000;
     font-size: 20px;
 }
+
 .question-block {
     margin-bottom: 40px;
     text-align: center;
 }
+
 .question-text {
     font-size: 1.3rem;
     font-weight: bold;
     color: #555;
     margin-bottom: 20px;
 }
+
 .rating-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
 }
+
 .left-label {
     font-weight: bold;
     color: #2E8B57;
 }
+
 .right-label {
     font-weight: bold;
     color: #8B5FBF;
 }
+
 .rating-options {
     display: flex;
     gap: 10px;
 }
-th, td {
+
+th,
+td {
     padding: 14px;
     text-align: center;
     font-size: 1.1em;
     color: #444;
     border-bottom: 1px solid #ddd;
 }
+
 tbody tr:hover td {
     background-color: rgba(128, 128, 128, 0.5);
     transition: background-color 0.25s ease;

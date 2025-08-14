@@ -1,48 +1,104 @@
+
 {% extends 'base.html' %}
 {% load i18n %}
+{% load widget_tweaks %}
+{% load static %}
 
 {% block title %}Information{% endblock %}
-
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3>{% trans "Finding perfect match location" %}</h3>
-                </div>
-                <div class="card-body">
-                    <form method="post" id="match-info-form">
-                        {% csrf_token %}
-                        {{ form.non_field_errors }}
-
-                        <div class="mb-3">
-                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
-                            {{ form.name }}
-                            {{ form.name.errors }}
+<link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,700" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    body {
+        font-family: 'Roboto', Arial, sans-serif;
+    }
+    .wrapper.img {
+        background-image: url('{% static 'chamu/img.jpg' %}');
+        background-size: cover;
+        background-position: center;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        padding: 0;
+    }
+    .contact-wrap {
+        background: rgba(255,255,255,0.95);
+        border-radius: 20px;
+        box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        min-height: 48px;
+        font-size: 1.1rem;
+    }
+    .btn-primary {
+        padding: 12px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+</style>
+<section class="ftco-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="wrapper img" >
+                    <div class="row">
+                        <div class="col-md-9 col-lg-7">
+                            <div class="contact-wrap w-100 p-md-5 p-4" >
+                                <h3 class="mb-4 text-center" style="color:#000 !important; background:#fff !important; padding:10px 0 !important; text-shadow:none !important; z-index:9999; position:relative;">Find Your Perfect Match Location</h3>
+                                <div id="form-message-warning" class="mb-4"></div>
+                                <div id="form-message-success" class="mb-4" style="display:none;">
+                                    {% trans "Your message was sent, thank you!" %}
+                                </div>
+                                <form method="post" id="match-info-form" autocomplete="off">
+                                    {% csrf_token %}
+                                    {% if form.non_field_errors %}
+                                        <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group mb-3">
+                                                <label class="label fw-semibold" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                                                {{ form.name|add_class:'form-control' }}
+                                                {% if form.name.errors %}
+                                                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group mb-3">
+                                                <label class="label fw-semibold" for="{{ form.country.id_for_label }}" style="margin-left: 10px;">{{ form.country.label }}</label>
+                                                {{ form.country|add_class:'form-select' }}
+                                                {% if form.country.errors %}
+                                                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group mb-3">
+                                                <label class="label fw-semibold" for="{{ form.target_prefecture.id_for_label }}" style="margin-left: 120px;">{{ form.target_prefecture.label }}</label>
+                                                {{ form.target_prefecture|add_class:'form-select' }}
+                                                {% if form.target_prefecture.errors %}
+                                                    <div class="text-danger small mt-1">{{ form.target_prefecture.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group mt-4 mb-0 text-center">
+                                                <button type="submit" class="btn btn-primary">{% trans "Start Survey" %}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
-                            {{ form.country }}
-                            {{ form.country.errors }}
-                        </div>
-
-                        <p class="fw-bold text-muted">{% trans "Please provide your target prefecture." %}</p>
-                        <div class="mb-2">
-                            <label for="{{ form.target_prefecture.id_for_label }}" class="form-label">{{ form.target_prefecture.label }}</label>
-                            {{ form.target_prefecture }}
-                            {{ form.target_prefecture.errors }}
-                        </div>
-
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">{% trans "Start survey" %}</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -52,9 +108,7 @@
         const countrySelect = document.getElementById('id_country');
         const prefectureSelect = document.getElementById('id_target_prefecture');
         const submitButton = document.querySelector('button[type="submit"]');
-
         submitButton.disabled = true;
-
         function checkFormValidity() {
             if (nameInput.value && countrySelect.value && prefectureSelect.value) {
                 submitButton.disabled = false;
@@ -62,12 +116,9 @@
                 submitButton.disabled = true;
             }
         }
-
         nameInput.addEventListener('input', checkFormValidity);
         countrySelect.addEventListener('change', checkFormValidity);
         prefectureSelect.addEventListener('change', checkFormValidity);
-
-        // Gọi hàm kiểm tra lần đầu khi tải trang để xử lý trường hợp có dữ liệu cũ
         checkFormValidity();
     });
 </script>
