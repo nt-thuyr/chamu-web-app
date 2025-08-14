@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.db.models import Avg
 from django.forms import formset_factory
@@ -212,7 +214,7 @@ def thank_you_view(request, user_info_id):
         })
 
     # Lấy thông tin từ Wikipedia
-    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
+    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name, prefecture.name)
 
     # Tạo bản đồ Folium
     municipality_map = None
@@ -500,7 +502,7 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
                     'municipality_score': score_obj.final_score,
                 })
 
-    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name)
+    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name, prefecture.name)
 
     # Create map by folium when there is coordinates
     municipality_map = None
@@ -523,22 +525,40 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
     })
 
 
-def get_municipality_info_from_wiki(municipality_name):
-    """Get desciption, image and link from wikipedia"""
-    try:
-        # Find Wikipedia page for the municipality
-        wikipedia.set_lang("ja")
-        page = wikipedia.page(municipality_name, auto_suggest=True)
+def get_municipality_info_from_wiki(municipality_name, prefecture_name):
+    """
+    Get description, image and link from Wikipedia using a more specific query.
+    """
+    wikipedia.set_lang("ja")
 
+    # 1. First, try with the full, specific name (e.g., "池田町 (福井県)")
+    full_name_query = f"{municipality_name} ({prefecture_name})"
+    try:
+        page = wikipedia.page(full_name_query, auto_suggest=False, redirect=True)
         description = page.summary
         wiki_url = page.url
         image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
         return description, image_url, wiki_url
+    except wikipedia.exceptions.PageError:
+        # If the specific page doesn't exist, try the name without the prefecture
+        try:
+            page = wikipedia.page(municipality_name, auto_suggest=True, redirect=True)
+            description = page.summary
+            wiki_url = page.url
+            # Clean up the description to remove "disambiguation" type text if needed
+            description = re.sub(r'\"(.+?)\" có thể đề cập đến:', '', description, flags=re.IGNORECASE).strip()
 
-    except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError) as e:
-        print(f"Error trying to get information from Wikipedia: {e}")
-        # Return default values if there's an error
-        return "Description is being updated", "https://via.placeholder.com/600x400", None
+            image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
+            return description, image_url, wiki_url
+        except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError) as e:
+            print(f"Error trying to get information from Wikipedia for {municipality_name}: {e}")
+            return "Description is being updated", "https://via.placeholder.com/600x400", None
+    except wikipedia.exceptions.DisambiguationError as e:
+        print(f"Disambiguation error for {municipality_name}. Options: {e.options}")
+        # If it's a disambiguation page even with the full name, you could try to pick the best match
+        # but for simplicity, we'll return a default here.
+        # A more advanced approach would be to loop through `e.options` to find a match.
+        return "Description is being updated due to multiple matches.", "https://via.placeholder.com/600x400", None
 
 def get_municipalities(request):
     prefecture_id = request.GET.get('prefecture_id')
