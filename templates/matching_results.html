@@ -25,13 +25,16 @@
         z-index: 1;
     }
     .text-muted {
-    color: #000000 !important;
-    font-size: medium;
-    margin-bottom: 20px;
-    padding: 4px 8px;
-    display: inline-block;
-    border-radius: 4px;
-}
+        font-size: medium;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+    p {
+        margin-top: 20px;
+        margin-bottom: 0;
+        color: #000000;
+        font-size: larger;
+    }
 
 
 </style>
@@ -55,11 +58,10 @@
                 {% endfor %}
             </ul>
         </div>
-        <p>{% trans "あなたの理想に基づいてランキングされた市区町村は以下の通り：" %}</p>
+        <p style="margin-bottom: 0;">{% trans "あなたの理想に基づいてランキングされた市区町村は以下の通り：" %}</p>
         <small class="text-muted">
-            これらのスコアは {{ country.name }} を選択したユーザーを基にしています。
+            これらのスコアは {{ user_info.country.name }} を選択したユーザーを基にしています。
         </small>
-
     
         <table class="table table-striped table-hover">
             <thead class="table-dark">
