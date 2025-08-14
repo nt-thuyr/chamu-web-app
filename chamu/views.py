@@ -1,3 +1,4 @@
+import requests
 from django import forms
 from django.db.models import Avg
 from django.forms import formset_factory
@@ -138,9 +139,12 @@ def evaluation_survey_view(request, user_info_id):
         print("Formset valid?", formset.is_valid())
         print("Formset errors:", formset.errors)
         formset = evaluation_survey_form_set(request.POST)
-        print(user_info.country)
 
         if formset.is_valid():
+            EvaluationSurvey.objects.filter(
+                user=user_info,
+                municipality=user_info.municipality
+            ).delete()
             # Use bulk_create for better performance
             evaluations = []
             for i, form in enumerate(formset):
@@ -525,41 +529,68 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
         'country': country
     })
 
-
 def get_municipality_info_from_wiki(municipality_name, prefecture_name):
     """
     Get description, image and link from Wikipedia using a more specific query.
     """
     wikipedia.set_lang("ja")
 
-    # 1. First, try with the full, specific name (e.g., "池田町 (福井県)")
+    # Gọi hàm mới để lấy URL ảnh chính
+    image_url = get_municipality_info_via_api(municipality_name)
+    if not image_url:
+        image_url = "https://via.placeholder.com/600x400"  # Ảnh mặc định nếu API không tìm thấy
+
+    # Bắt đầu tìm kiếm thông tin trên Wikipedia
     full_name_query = f"{municipality_name} ({prefecture_name})"
     try:
         page = wikipedia.page(full_name_query, auto_suggest=False, redirect=True)
         description = page.summary
         wiki_url = page.url
-        image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
+
         return description, image_url, wiki_url
     except wikipedia.exceptions.PageError:
-        # If the specific page doesn't exist, try the name without the prefecture
+        # Nếu không tìm thấy trang cụ thể, thử lại với tên chung hơn
         try:
             page = wikipedia.page(municipality_name, auto_suggest=True, redirect=True)
             description = page.summary
             wiki_url = page.url
-            # Clean up the description to remove "disambiguation" type text if needed
+            # Dọn dẹp mô tả nếu cần
             description = re.sub(r'\"(.+?)\" có thể đề cập đến:', '', description, flags=re.IGNORECASE).strip()
 
-            image_url = page.images[0] if page.images else "https://via.placeholder.com/600x400"
             return description, image_url, wiki_url
         except (wikipedia.exceptions.PageError, wikipedia.exceptions.DisambiguationError) as e:
             print(f"Error trying to get information from Wikipedia for {municipality_name}: {e}")
-            return "Description is being updated", "https://via.placeholder.com/600x400", None
+            return "Description is being updated", image_url, None
     except wikipedia.exceptions.DisambiguationError as e:
         print(f"Disambiguation error for {municipality_name}. Options: {e.options}")
-        # If it's a disambiguation page even with the full name, you could try to pick the best match
-        # but for simplicity, we'll return a default here.
-        # A more advanced approach would be to loop through `e.options` to find a match.
-        return "Description is being updated due to multiple matches.", "https://via.placeholder.com/600x400", None
+        return "Description is being updated due to multiple matches.", image_url, None
+
+
+def get_municipality_info_via_api(municipality_name):
+    """
+    Sử dụng API của Wikipedia để tìm ảnh chính của bài viết.
+    """
+    url = "https://ja.wikipedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "format": "json",
+        "prop": "pageimages",
+        "titles": municipality_name,
+        "pithumbsize": 600,  # Kích thước hình ảnh thu nhỏ mong muốn
+        "redirects": 1
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+        pages = data['query']['pages']
+        for page_id, page_data in pages.items():
+            if 'thumbnail' in page_data:
+                return page_data['thumbnail']['source']  # Trả về URL của ảnh chính
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from Wikipedia API: {e}")
+
+    return None  # Trả về None nếu không tìm thấy ảnh
 
 @require_GET
 def get_municipalities(request):
