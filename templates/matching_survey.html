@@ -26,7 +26,6 @@
 <div class="content-on-blur">
     <div class="row justify-content-center ">
         <div class="col-md-8 col-lg-6">
-            <!-- Card container -->
             <div class="card shadow-lg  rounded-4 p-4" style="background-color: #ffffff; border: 2px solid #77b6e0ff; border-radius: 10px; padding: 20px;">
                 <div class="text-center mb-4">
                     <h2 class="fw-bold" style="color: #2c3e50;">
@@ -48,7 +47,15 @@
                             <select class="form-select shadow-sm" id="rank_{{ rank }}" name="rank_{{ rank }}" required>
                                 <option value="">--- {% trans "Select a criteria" %} ---</option>
                                 {% for criteria in criteria_list %}
-                                    <option value="{{ criteria.id }}">{{ criteria.name }}</option>
+                                    <option value="{{ criteria.id }}">
+                                        {{ criteria.name }} (
+                                        {% if criteria.is_reverse %}
+                                            {{ criteria.right_label }}
+                                        {% else %}
+                                            {{ criteria.left_label }}
+                                        {% endif %}
+                                        )
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>

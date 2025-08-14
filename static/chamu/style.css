@@ -1,17 +1,100 @@
-h3 {
-    color: #000 !important;
-    background: #fff !important;
-    padding: 10px 0 !important;
-    text-shadow: none !important;
-}
-
 body {
-    font-family: "Libertinus Serif";
+    font-family: "Libertinus Serif", serif; /* Thêm font dự phòng */
     font-weight: 400;
     font-style: normal;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+h2, h3 {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 30px; /* Giảm margin bottom để gọn hơn */
+}
+
+h2 {
+    font-size: 55px;
+    margin-bottom: 50px;
+    background: linear-gradient(90deg, #000000, #5F5F5F);
+    /* オレンジ系グラデ */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    animation: fadeInDown 1s ease-out forwards;
+}
+
+h2::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
+    margin: 20px auto 0;
+    border-radius: 20px;
+    animation: expandBar 0.8s ease-out forwards;
+    animation-delay: 0.5s;
+}
+
+h3 {
+    font-size: 2.5rem; /* Tăng kích thước font */
+    color: #1976d2 !important;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.7), 0 1px 0 rgba(204, 204, 204, 0.5); /* Tạo shadow đẹp hơn */
+    position: relative;
+    padding-bottom: 10px; /* Khoảng trống cho đường kẻ */
+}
+
+/* Đường kẻ dưới tiêu đề */
+h3::after {
+    content: "";
+    display: block;
+    width: 60px; /* Tăng chiều rộng */
+    height: 3px; /* Giảm độ dày */
+    background: linear-gradient(90deg, #1976d2, #a3a19f); /* Đổi màu gradient */
+    margin: 10px auto 0;
+    border-radius: 20px;
+}
+
+/* --- Form và Label --- */
+label {
+    display: block; /* Đảm bảo label đứng độc lập trên một dòng */
+    text-align: left; /* Căn lề trái */
+    font-weight: 700;
+    margin-bottom: 0.5rem; /* Khoảng cách giữa label và input */
+    color: #333;
+    cursor: pointer;
+    background: none; /* Xóa background "bong bóng" */
+    border: none; /* Xóa border "bong bóng" */
+    border-radius: 0;
+    box-shadow: none; /* Xóa box-shadow "bong bóng" */
+    padding: 0;
+    width: auto;
+    height: auto;
+    transition: none; /* Xóa transition không cần thiết */
+}
+
+
+input[type="radio"] + label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 50%;
+    background-color: #F8F9FA;
+    color: #495057;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    letter-spacing: 2px;
+}
+
+input[type="radio"]:checked + label {
+    background-color: #808080;
+    color: #fff;
+    border-color: #808080;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px) scale(1.05); /* Tăng hiệu ứng nhẹ hơn */
 }
 
 .navbar {
@@ -23,7 +106,6 @@ footer {
     opacity: 0;
 }
 
-label,
 .navbar-brand {
     font-weight: 700;
 }
@@ -38,7 +120,7 @@ label,
     background-position: center;
     background-repeat: no-repeat;
     z-index: -1;
-  
+
 }
 
 .bg_test-img {
@@ -58,7 +140,7 @@ label,
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255,255,255,0.5); 
+    background: rgba(255,255,255,0.5);
     z-index: 1;
     pointer-events: none;
 }
@@ -148,51 +230,35 @@ label,
     z-index: 2;
 }
 
-.mb-3 label {
-    white-space: nowrap;
-}
-
-.mb-4 label {
-    white-space: nowrap;
-}
-
-.mb-2 label {
-    display: flex;
+/* --- Label --- */
+.mb-2 label, .mb-3 label, .mb-4 label {
+    white-space: normal; /* Đảm bảo văn bản không bị cắt */
+    width: auto;
+    height: auto;
+    display: block;
     justify-content: flex-start;
-    /* 左寄せ */
-    align-items: center;
-    /* 垂直方向は中央のまま */
-    width: 150px;
-    /* 横幅を広げる */
-    height: 100px;
-    /* 縦幅を小さくする */
-    border-radius: 50%;
-    /* 50%にすると楕円形になる */
-    background-color: white;
 }
 
-/* ボタンのスタイルを変更 */
+/* --- Buttons --- */
 .btn-primary {
-    background-image: linear-gradient(to right, #2b5273 0%, #4e738b 51%, #2b5273 100%);
+    background-image: linear-gradient(to right, #1976d2 0%, #4e738b 51%, #1976d2 100%);
     background-size: 200% auto;
     color: white;
     border: none;
-    border-radius: 100px;
-    padding: 15px 45px;
+    border-radius: 50px; /* Sử dụng 50px để bo tròn đẹp hơn */
+    padding: 12px 30px; /* Điều chỉnh padding */
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px; /* Giảm letter-spacing */
     transition: 0.5s;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover {
     background-position: right center;
-    /* ホバー時にグラデーションが移動する */
     color: #fff;
-    text-decoration: none;
     transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
 }
 
 .btn-primary:active {
@@ -200,7 +266,7 @@ label,
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* ラベルと入力フィールドのスタイル */
+/* --- Input Fields --- */
 .form-label {
     font-weight: bold;
     color: #333;
@@ -209,36 +275,16 @@ label,
 }
 
 .form-control {
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #ddd;
-    padding: 10px 15px;
+    padding: 0.75rem 1rem; /* Điều chỉnh padding */
     transition: all 0.3s ease;
 }
 
 .form-control:focus {
     border-color: #2b5273;
-    box-shadow: 0 0 0 0.2rem rgba(43, 82, 115, 0.25);
+    box-shadow: 0 0 0 0.25rem rgba(43, 82, 115, 0.25); /* Tăng kích thước box-shadow */
     outline: none;
-}
-
-input[type="radio"] {
-    display: none;
-}
-
-label {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    width: 50px;
-    height: 50px;
-    border: 1px solid rgba(256, 256, 256, 0.2);
-    border-radius: 50%;
-    background-color: #F8F9FA;
-    color: #495057;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-    letter-spacing: 2px;
 }
 
 table {
@@ -251,84 +297,11 @@ table {
     transition: all 0.3s ease;
 }
 
-label:hover {
-    background-color: #EEF1F4;
-    border-color: #DCDCDC;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transform: translateY(-2px);
-}
-
 .btn-outline-primary:active {
     transform: translateY(0);
     box-shadow: 0 4px 5px rgba(0, 0, 0, 0.2);
     background-color: #5a6268;
     border-color: #5a6268;
-}
-
-input[type="radio"]:checked+label {
-    background-color: #808080;
-    color: #fff;
-    border-color: #808080;
-    box-shadow: 0 6px 12px rgba(2, 2, 2, 0.5);
-    transform: translateY(-5px) scale(1.01);
-}
-
-h2 {
-    text-align: center;
-    font-size: 55px;
-    font-weight: bold;
-    margin-bottom: 50px;
-    background: linear-gradient(90deg, #000000, #5F5F5F);
-    /* オレンジ系グラデ */
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    position: relative;
-    animation: fadeInDown 1s ease-out forwards;
-}
-
-h2::after {
-    content: "";
-    display: block;
-    width: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
-    margin: 20px auto 0;
-    border-radius: 20px;
-    animation: expandBar 0.8s ease-out forwards;
-    animation-delay: 0.5s;
-}
-
-h3 {
-    text-align: center;
-    font-size: 55px;
-    font-weight: bold;
-    margin-bottom: 50px;
-    color: #1976d2;
-    position: relative;
-    animation: fadeInDown 1s ease-out forwards;
-}
-
-h3 {
-    text-align: center;
-    font-size: 55px;
-    font-weight: bold;
-    margin-bottom: 50px;
-    color: #1976d2 !important;
-    text-shadow: 0 2px 8px #fff, 0 1px 0 #ccc;
-    position: relative;
-    animation: fadeInDown 1s ease-out forwards;
-}
-
-h3::after {
-    content: "";
-    display: block;
-    width: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
-    margin: 20px auto 0;
-    border-radius: 20px;
-    animation: expandBar 0.8s ease-out forwards;
-    animation-delay: 0.5s;
 }
 
 @keyframes fadeInDown {

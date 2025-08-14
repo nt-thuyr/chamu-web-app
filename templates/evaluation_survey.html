@@ -6,52 +6,215 @@
 
 {% block content %}
 <style>
+    /* Bố cục chính của trang */
     body {
         background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
         background-size: cover;
     }
+
+    /* Tiêu đề chính */
+    .evaluation-h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-top: 50px;
+        margin-bottom: 30px;
+        color: #000;
+        position: relative;
+    }
+
+    .evaluation-h2::after {
+        content: "";
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #1976d2;
+        margin: 10px auto 0;
+        border-radius: 20px;
+    }
+
+    /* Khối form và bảng */
+    .evaluation-container {
+        max-width: 900px;
+        margin: auto;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
+        margin-bottom: 50px;
+    }
+
+    /* Tùy chỉnh bảng */
+    .evaluation-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 45px rgba(0, 0, 0, 0.1);
+    }
+
+    .evaluation-table thead th {
+        font-weight: 700;
+        text-align: center;
+        color: #fff;
+        background: linear-gradient(135deg, #1976d2, #64b5f6);
+        border: none;
+        padding: 1rem;
+    }
+
+    .evaluation-table thead th:first-child {
+        border-top-left-radius: 12px;
+
+    }
+
+    .evaluation-table thead th:last-child {
+        border-top-right-radius: 12px;
+    }
+
+    .evaluation-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .evaluation-table tbody td {
+        padding: 1rem;
+        text-align: center;
+        font-size: 1.1em;
+        color: #444;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .evaluation-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .question-text {
+        font-weight: 600;
+        color: #333;
+        text-align: left !important;
+    }
+
+    /* Tùy chỉnh rating options */
+    .rating-options {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-grow: 1;
+    }
+
+    input[type="radio"] {
+        display: none;
+    }
+
+    .rating-options label {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        background-color: #f0f0f0;
+        border: 1px solid #e0e0e0;
+        color: #555;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .rating-options label:hover {
+        background-color: #e2f0ff;
+        border-color: #1976d2;
+        color: #1976d2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="radio"]:checked + label {
+        background-color: #1976d2;
+        border-color: #1976d2;
+        color: #fff;
+        transform: scale(1.1);
+        box-shadow: 0 6px 12px rgba(25, 118, 210, 0.3);
+    }
+
+    .left-label, .right-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    .left-label {
+        color: #2e7d32;
+    }
+    .right-label {
+        color: #c62828;
+    }
+
+    /* Nút Submit */
+    .submit-container {
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(to right, #1976d2 0%, #4e738b 51%, #1976d2 100%);
+        background-size: 200% auto;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 3rem;
+        font-weight: 600;
+        transition: 0.5s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-submit:hover {
+        background-position: right center;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
 </style>
 
-<h2>Rate your municipality</h2>
-
-<form method="post">
-    {% csrf_token %}
-    {{ formset.management_form }}
-
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Criteria</th>
-                <th colspan="5">How do you think?</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for form, criteria in form_criteria %}
-            <tr>
-                <td class="question-text">{{ criteria.name }}</td>
-
-                <td colspan="5">
-                    <div class="rating-row">
-                        <span class="left-label">{{ criteria.left_label }}</span>
-                        <div class="rating-options">
-                            {% for i in "12345" %}
-                                <input type="radio" 
-                                       name="{{ form.prefix }}-score" 
-                                       value="{{ forloop.counter }}" 
-                                       id="{{ form.prefix }}-score-{{ forloop.counter }}">
-                                <label for="{{ form.prefix }}-score-{{ forloop.counter }}">{{ forloop.counter }}</label>
-                            {% endfor %}
+<div class="container evaluation-container">
+    <h2 class="evaluation-h2">{% trans "Rate your municipality" %}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        <table class="evaluation-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Criteria" %}</th>
+                    <th colspan="5">{% trans "How do you think?" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for form, criteria in form_criteria %}
+                <tr>
+                    <td class="question-text">{{ criteria.name }}</td>
+                    <td colspan="5">
+                        <div class="rating-row">
+                            <span class="left-label">{{ criteria.left_label }}</span>
+                            <div class="rating-options">
+                                {% for i in "12345" %}
+                                    <input type="radio"
+                                        name="{{ form.prefix }}-score"
+                                        value="{{ forloop.counter }}"
+                                        id="{{ form.prefix }}-score-{{ forloop.counter }}">
+                                    <label for="{{ form.prefix }}-score-{{ forloop.counter }}">{{ forloop.counter }}</label>
+                                {% endfor %}
+                            </div>
+                            <span class="right-label">{{ criteria.right_label }}</span>
                         </div>
-                        <span class="right-label">{{ criteria.right_label }}</span>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <button type="submit" class="btn btn-success">Submit</button>
-</form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="submit-container">
+            <button type="submit" class="btn btn-submit">{% trans "Submit" %}</button>
+        </div>
+    </form>
+</div>
 {% endblock %}
 
 <script>

@@ -1,16 +1,14 @@
 from django.conf import settings
 from django.db import models
-from django.utils.text import slugify
-from autoslug import AutoSlugField
 
 User = settings.AUTH_USER_MODEL
 
 class Criteria(models.Model):
     name = models.CharField(max_length=100, unique=True, help_text="Name of the criteria, e.g. 'Cost of Living', 'Safety', etc.")
-    slug = AutoSlugField(populate_from='name', unique=True, always_update=True)
+    slug = models.SlugField(max_length=100, unique=True, help_text="A short label for URL, must be unique.")
 
-    left_label = models.CharField(max_length=100, help_text="Good. e.g. 'Cheap', 'Safe', ...")
-    right_label = models.CharField(max_length=100, help_text="Bad. e.g. 'Expensive', 'Unsafe', ...")
+    left_label = models.CharField(max_length=100, help_text="Low index")
+    right_label = models.CharField(max_length=100, help_text="High index")
 
     is_reverse = models.BooleanField(default=False)
 

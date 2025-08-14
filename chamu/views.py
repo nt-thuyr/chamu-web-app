@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 from django.db.models import Avg
 from django.forms import formset_factory
@@ -8,7 +6,9 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-import wikipedia, folium
+import wikipedia, folium, geopy, geopy.distance, re
+from django.views.decorators.http import require_GET
+
 from .forms import (
     BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
 )
@@ -496,10 +496,11 @@ def municipality_details_view(request, municipality_id, user_info_id=None):
             rank = int(rank_str)
             score_obj = scores_map.get(criteria_id)
             if score_obj:
+                display_score = score_obj.final_score if score_obj.final_score and score_obj.final_score != 0 else score_obj.base_score
                 criteria_details.append({
                     'criteria_name': criteria_map.get(criteria_id, 'N/A'),
                     'priority': rank,
-                    'municipality_score': score_obj.final_score,
+                    'municipality_score': display_score,
                 })
 
     description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name, prefecture.name)
@@ -560,6 +561,7 @@ def get_municipality_info_from_wiki(municipality_name, prefecture_name):
         # A more advanced approach would be to loop through `e.options` to find a match.
         return "Description is being updated due to multiple matches.", "https://via.placeholder.com/600x400", None
 
+@require_GET
 def get_municipalities(request):
     prefecture_id = request.GET.get('prefecture_id')
     if not prefecture_id:
@@ -571,3 +573,140 @@ def get_municipalities(request):
         return JsonResponse(list(municipalities), safe=False)
     except (ValueError, TypeError):
         return JsonResponse([], safe=False)
+
+# ------------- HÀM LẤY TỌA ĐỘ ĐỂ LÀM MAP INFO PAGE --------------
+# Các hàm mới theo cùng pattern
+@require_GET
+def get_prefectures(request):
+    """Lấy danh sách tất cả prefectures với tọa độ trung bình từ municipalities"""
+    try:
+        prefectures_data = []
+        prefectures = Prefecture.objects.all()
+
+        for prefecture in prefectures:
+            # Tính tọa độ trung bình từ municipalities
+            avg_coords = Municipality.objects.filter(
+                prefecture=prefecture,
+                latitude__isnull=False,
+                longitude__isnull=False
+            ).aggregate(
+                avg_lat=Avg('latitude'),
+                avg_lng=Avg('longitude')
+            )
+
+            prefectures_data.append({
+                'id': prefecture.id,
+                'name': prefecture.name,
+                'latitude': avg_coords['avg_lat'],
+                'longitude': avg_coords['avg_lng']
+            })
+
+        return JsonResponse(prefectures_data, safe=False)
+    except Exception:
+        return JsonResponse([], safe=False)
+
+
+@require_GET
+def get_prefecture_coords(request):
+    """Lấy tọa độ trung bình của prefecture từ municipalities"""
+    prefecture_id = request.GET.get('prefecture_id')
+    if not prefecture_id:
+        return JsonResponse({'error': 'Prefecture ID is required'}, status=400)
+
+    try:
+        prefecture = get_object_or_404(Prefecture, id=prefecture_id)
+
+        # Tính tọa độ trung bình từ municipalities
+        avg_coords = Municipality.objects.filter(
+            prefecture=prefecture,
+            latitude__isnull=False,
+            longitude__isnull=False
+        ).aggregate(
+            avg_lat=Avg('latitude'),
+            avg_lng=Avg('longitude')
+        )
+
+        if avg_coords['avg_lat'] is None or avg_coords['avg_lng'] is None:
+            return JsonResponse({'error': 'No coordinate data available for this prefecture'}, status=404)
+
+        return JsonResponse({
+            'latitude': avg_coords['avg_lat'],
+            'longitude': avg_coords['avg_lng'],
+            'name': prefecture.name
+        })
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid prefecture ID'}, status=400)
+
+
+@require_GET
+def get_municipality_coords(request):
+    """Lấy tọa độ của municipality theo ID"""
+    municipality_id = request.GET.get('municipality_id')
+    if not municipality_id:
+        return JsonResponse({'error': 'Municipality ID is required'}, status=400)
+
+    try:
+        municipality = get_object_or_404(Municipality, id=municipality_id)
+
+        if not municipality.latitude or not municipality.longitude:
+            return JsonResponse({'error': 'No coordinate data available for this municipality'}, status=404)
+
+        return JsonResponse({
+            'latitude': municipality.latitude,
+            'longitude': municipality.longitude,
+            'name': municipality.name
+        })
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid municipality ID'}, status=400)
+
+
+@require_GET
+def get_location_by_coords(request):
+    """
+    Tìm municipality gần nhất dựa trên tọa độ, prefecture sẽ được suy ra từ municipality
+    """
+    lat_str = request.GET.get('lat')
+    lng_str = request.GET.get('lng')
+
+    if not lat_str or not lng_str:
+        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+
+    try:
+        target_lat = float(lat_str)
+        target_lng = float(lng_str)
+
+        municipalities = Municipality.objects.filter(
+            latitude__isnull=False,
+            longitude__isnull=False
+        ).select_related('prefecture')
+
+        if not municipalities.exists():
+            return JsonResponse({'error': 'No municipalities with coordinate data found'}, status=404)
+
+        closest_municipality = None
+        min_distance = float('inf')
+
+        for municipality in municipalities:
+            distance = geopy.distance.geodesic(
+                (municipality.latitude, municipality.longitude),
+                (target_lat, target_lng)
+            ).km
+            if distance < min_distance:
+                min_distance = distance
+                closest_municipality = municipality
+
+        if not closest_municipality:
+            return JsonResponse({'error': 'No municipality found'}, status=404)
+
+        return JsonResponse({
+            'prefecture_id': closest_municipality.prefecture.id,
+            'prefecture_name': closest_municipality.prefecture.name,
+            'municipality_id': closest_municipality.id,
+            'municipality_name': closest_municipality.name,
+            'distance_km': round(min_distance, 2)
+        })
+
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid coordinates'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

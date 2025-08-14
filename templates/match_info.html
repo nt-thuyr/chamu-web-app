@@ -1,135 +1,307 @@
-
 {% extends 'base.html' %}
 {% load i18n %}
 {% load widget_tweaks %}
 {% load static %}
 
 {% block title %}Information{% endblock %}
+
 {% block content %}
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,700" rel="stylesheet">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
-    body {
-        font-family: "Libertinus Serif";
-        font-weight: 400;
-        font-style: normal;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
+    /* ------------------- CSS ĐÃ CHỈNH SỬA VÀ TỐI ƯU HÓA ------------------- */
+    nav {
+        position: relative;
+        z-index: 2;
     }
-    body::before {
-        content: "";
+
+    .bg-blur {
         position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
         background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
         background-size: cover;
-        opacity: 0.6; /* 透明度を調整 */
-        z-index: -1;
-        pointer-events: none;
+        filter: blur(2px);
+        z-index: 0;
+        opacity: 0.6;
     }
-    .wrapper.img {
-        background-image: url('{% static 'chamu/img.jpg' %}');
-        background-size: cover;
-        background-position: center;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        padding: 0;
+
+    .content-on-blur {
+        position: relative;
+        z-index: 1;
+        padding-top: 50px;
+        padding-bottom: 50px;
     }
+
+    .row.justify-content-center {
+        display: flex;
+        align-items: center;
+    }
+
     .contact-wrap {
         background: rgba(255,255,255,0.95);
         border-radius: 20px;
         box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
+        padding: 2rem 3rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
+
+    .contact-wrap form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    h3.mb-4 {
+        text-align: center;
+        background: none !important;
+        color: #000 !important;
+        padding-bottom: 0.5rem;
+        position: relative;
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    h3.mb-4::after {
+        content: '';
+        display: block;
+        width: 50px;
+        height: 3px;
+        background-color: #1976d2;
+        margin: 10px auto 0;
+    }
+
+    .form-group {
+        margin-bottom: 1rem; /* Khoảng cách giữa các form-group */
+        flex-grow: 1;
+        max-width: 100%;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        padding: 0.75rem;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        width: 100%; /* Cố định chiều rộng */
+        box-sizing: border-box; /* Tính cả padding và border vào kích thước */
+    }
+
+    /* Giảm khoảng cách cho nút "Start Survey" */
+    .form-group.mt-4 {
+        margin-top: 1rem !important; /* Thay thế mt-4 của Bootstrap */
+    }
+
     .btn-primary {
-        padding: 12px 40px;
-        border-radius: 50px;
+        background-color: #1976d2;
+        border-color: #1976d2;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
-        font-size: 1.1rem;
-        letter-spacing: 1px;
+        transition: background-color 0.3s, transform 0.3s;
+    }
+    .btn-primary:hover {
+        background-color: #1565c0;
+        border-color: #1565c0;
+        transform: translateY(-2px);
+    }
+
+    #map {
+        height: 500px;
+        border-radius: 20px;
+        border: 2px solid #ddd;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .map-instruction {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #1565c0;
+        text-align: center;
+    }
+    #map-loading {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    .loading .contact-wrap, .loading #map {
+        pointer-events: none;
     }
 </style>
-<section class="ftco-section py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="wrapper img" >
-                    <div class="row">
-                        <div class="col-md-9 col-lg-7">
-                            <div class="contact-wrap w-100 p-md-5 p-4" >
-                                <h3 class="mb-4 text-center" style="color:#000 !important; background:#fff !important; padding:10px 0 !important; text-shadow:none !important; z-index:9999; position:relative;">Find Your Perfect Match Location</h3>
-                                <div id="form-message-warning" class="mb-4"></div>
-                                <div id="form-message-success" class="mb-4" style="display:none;">
-                                    {% trans "Your message was sent, thank you!" %}
-                                </div>
-                                <form method="post" id="match-info-form" autocomplete="off">
-                                    {% csrf_token %}
-                                    {% if form.non_field_errors %}
-                                        <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
-                                    {% endif %}
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-                                                {{ form.name|add_class:'form-control' }}
-                                                {% if form.name.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.country.id_for_label }}" style="margin-left: 10px;">{{ form.country.label }}</label>
-                                                {{ form.country|add_class:'form-select' }}
-                                                {% if form.country.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mb-3">
-                                                <label class="label fw-semibold" for="{{ form.target_prefecture.id_for_label }}" style="margin-left: 120px;">{{ form.target_prefecture.label }}</label>
-                                                {{ form.target_prefecture|add_class:'form-select' }}
-                                                {% if form.target_prefecture.errors %}
-                                                    <div class="text-danger small mt-1">{{ form.target_prefecture.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group mt-4 mb-0 text-center">
-                                                <button type="submit" class="btn btn-primary">{% trans "Start Survey" %}</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+
+<div class="bg-blur"></div>
+<div class="content-on-blur">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="contact-wrap w-100 p-md-5 p-4">
+                        <h3 class="mb-4">{% trans "Find Your Perfect Match Location" %}</h3>
+                        <form method="post" id="match-info-form" autocomplete="off">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="id_name" class="label fw-semibold">{{ form.name.label }}</label>
+                                {{ form.name|add_class:'form-control' }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                                {% endif %}
                             </div>
+                            <div class="form-group">
+                                <label for="id_country" class="label fw-semibold">{{ form.country.label }}</label>
+                                {{ form.country|add_class:'form-select' }}
+                                {% if form.country.errors %}
+                                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_target_prefecture" class="label fw-semibold">{{ form.target_prefecture.label }}</label>
+                                {{ form.target_prefecture|add_class:'form-select' }}
+                                {% if form.target_prefecture.errors %}
+                                    <div class="text-danger small mt-1">{{ form.target_prefecture.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group mt-4 mb-0 text-center">
+                                <button type="submit" class="btn btn-primary w-100" id="submit-button">
+                                    {% trans "Start Survey" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-center">
+                    <div class="p-4 w-100">
+                        <div class="map-instruction">
+                            <i class="fa fa-info-circle"></i>
+                            {% trans "Click on the map to select a location, or use the dropdowns on the left." %}
+                        </div>
+                        <div id="map"></div>
+                        <div id="map-loading" class="text-center mt-2" style="display: none;">
+                            <i class="fa fa-spinner fa-spin"></i> {% trans "Loading..." %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // DOM elements
         const nameInput = document.getElementById('id_name');
         const countrySelect = document.getElementById('id_country');
         const prefectureSelect = document.getElementById('id_target_prefecture');
-        const submitButton = document.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        function checkFormValidity() {
-            if (nameInput.value && countrySelect.value && prefectureSelect.value) {
-                submitButton.disabled = false;
-            } else {
-                submitButton.disabled = true;
+        const submitButton = document.getElementById('submit-button');
+        const mapLoadingDiv = document.getElementById('map-loading');
+
+        let isUpdatingFromMap = false;
+
+        // Initialize map
+        const map = L.map('map').setView([35.6895, 139.6917], 5); // Default to Tokyo
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let currentMarker = null;
+
+        function updateMap(lat, lng, zoom = 10) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            if (lat && lng) {
+                const latlng = [lat, lng];
+                map.setView(latlng, zoom);
+                currentMarker = L.marker(latlng).addTo(map);
             }
         }
+
+        function showLoading(show) {
+            if (show) {
+                mapLoadingDiv.style.display = 'block';
+                document.body.classList.add('loading');
+            } else {
+                mapLoadingDiv.style.display = 'none';
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function checkFormValidity() {
+            const isValid = nameInput.value.trim() &&
+                           countrySelect.value &&
+                           prefectureSelect.value;
+            submitButton.disabled = !isValid;
+        }
+
+        // Prefecture change handler
+        prefectureSelect.addEventListener('change', function() {
+            const prefectureId = this.value;
+
+            if (!isUpdatingFromMap && prefectureId) {
+                showLoading(true);
+                fetch(`/api/prefecture_coords/?prefecture_id=${prefectureId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.latitude && data.longitude) {
+                            updateMap(data.latitude, data.longitude, 8);
+                        }
+                    })
+                    .finally(() => {
+                        showLoading(false);
+                    });
+            }
+            checkFormValidity();
+        });
+
+        // Map click handler
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            showLoading(true);
+            isUpdatingFromMap = true;
+
+            updateMap(lat, lng, map.getZoom());
+
+            fetch(`/api/location_by_coords/?lat=${lat}&lng=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prefecture_id) {
+                        prefectureSelect.value = data.prefecture_id;
+                        checkFormValidity();
+                    } else {
+                        alert('No prefecture found for this location.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting location:', error);
+                    alert('Error getting location information. Please try a different area.');
+                })
+                .finally(() => {
+                    isUpdatingFromMap = false;
+                    showLoading(false);
+                });
+        });
+
+        // Validation and event listeners
         nameInput.addEventListener('input', checkFormValidity);
         countrySelect.addEventListener('change', checkFormValidity);
-        prefectureSelect.addEventListener('change', checkFormValidity);
+
+        // Initial form check
         checkFormValidity();
     });
 </script>
