@@ -1,48 +1,84 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{% trans "Thank You" %} - {{ municipality.name }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<style>
+    .navbar {
+        position: relative;
+        z-index: 10;
+    }
+    .bg-blur {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        filter: blur(2px);
+        z-index: 0;
+    }
+    .content-on-blur {
+        position: relative;
+        z-index: 1;
+    }
+    /* Custom CSS for improved card layout */
+    .card-header.rounded-top {
+        border-top-left-radius: 15px !important;
+        border-top-right-radius: 15px !important;
+    }
+    .card-footer.rounded-bottom {
+        border-bottom-left-radius: 15px !important;
+        border-bottom-right-radius: 15px !important;
+    }
+    /* Ensure the table inside the card has rounded corners at the bottom */
+    .table-responsive .table {
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+        overflow: hidden; /* Hide excess border */
+    }
+</style>
+<div class="bg-blur"></div>
+<div class="container my-5 content-on-blur">
     <div class="row">
         <div class="col-md-10 offset-md-1">
-            <div class="text-center mb-4">
-                <div class="alert alert-success" role="alert">
-                    <h2 class="alert-heading">
-                        <i class="fas fa-check-circle me-2"></i>{% trans "Thank You!" %}
-                    </h2>
-                    <p class="mb-0">{% trans "Your evaluation has been successfully submitted and will help others make informed decisions." %}</p>
-                </div>
+
+            <div class="alert alert-success text-center mb-5" role="alert">
+                <h2 class="alert-heading fw-bold">
+                    <i class="fas fa-check-circle me-2"></i>{% trans "Thank You!" %}
+                </h2>
+                <p class="mb-0">{% trans "Your evaluation has been successfully submitted and will help others make informed decisions." %}</p>
             </div>
 
-            <h1 class="text-center mb-4">{{ municipality.name }}</h1>
-            <p class="text-center text-muted">
+            <h1 class="text-center fw-bold">{{ municipality.name }}</h1>
+            <p class="text-center text-muted mb-5">
                 {% trans "In" %}: {{ prefecture.name }}
             </p>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card mt-4 shadow-sm h-100">
-                        <div class="card-header bg-info text-white">
+            <div class="row g-4">
+                <div class="col-lg-6 d-flex">
+                    <div class="card shadow-sm h-100 flex-grow-1">
+                        <div class="card-header bg-info text-white rounded-top">
                             <i class="fas fa-map-marker-alt me-2"></i>{% trans "Location & Image" %}
                         </div>
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             {% if municipality_map %}
-                                {{ municipality_map|safe }}
+                                <div class="rounded overflow-hidden mb-3">
+                                    {{ municipality_map|safe }}
+                                </div>
                             {% else %}
                                 <div class="alert alert-warning">{% trans "Map not available." %}</div>
                             {% endif %}
 
                             {% if image_url and image_url != 'https://via.placeholder.com/600x400' %}
-                                <img src="{{ image_url }}" class="img-fluid rounded mt-3" alt="{% trans 'Image of' %} {{ municipality.name }}" style="max-height: 400px; object-fit: cover;">
+                                <img src="{{ image_url }}" class="img-fluid rounded-bottom" alt="{% trans 'Image of' %} {{ municipality.name }}" style="max-height: 400px; object-fit: cover;">
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card mt-4 shadow-sm h-100">
-                        <div class="card-header bg-success text-white">
+                <div class="col-lg-6 d-flex">
+                    <div class="card shadow-sm h-100 flex-grow-1">
+                        <div class="card-header bg-success text-white rounded-top">
                             <i class="fas fa-star-half-alt me-2"></i>{% trans "Score Summary" %}
                         </div>
                         <div class="table-responsive">
@@ -69,15 +105,15 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="card-footer text-muted">
+                        <div class="card-footer text-muted rounded-bottom">
                             <small>{% trans "Note: Lower scores are better. Your score contributes to the current score." %}</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card mt-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-primary text-white rounded-top">
                     <i class="fas fa-info-circle me-2"></i>{% trans "Description" %}
                 </div>
                 <div class="card-body">
@@ -90,7 +126,7 @@
                 </div>
             </div>
 
-            <div class="text-center mt-5 mb-5">
+            <div class="text-center mt-5">
                 <div class="d-grid gap-2 d-md-block">
                     <a href="{% url 'homepage' %}" class="btn btn-primary btn-lg">
                         <i class="fas fa-home me-2"></i>{% trans "Back to Home" %}
@@ -100,6 +136,7 @@
                     </a>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

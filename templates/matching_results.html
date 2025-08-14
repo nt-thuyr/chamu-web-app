@@ -5,10 +5,10 @@
 {% block title %}{% trans "About" %} {{ municipality.name }}{% endblock %}
 
 {% block content %}
-    <style>
+<style>
     nav {
-    position: relative;
-    z-index: 2; 
+        position: relative;
+        z-index: 2;
     }
 
     .bg-blur {
@@ -35,8 +35,10 @@
         color: #000000;
         font-size: larger;
     }
-
-
+    .list-group-item:last-child {
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
 </style>
 <div class="bg-blur"></div>
 <div class="content-on-blur">
