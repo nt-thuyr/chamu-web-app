@@ -53,12 +53,9 @@
 
     $(function() {
 
-    const updateHintHtml = `
-<div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
-<span>Submit is only allowed when all 3 fields are filled in.</span>
-<button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-`;
+        const $updatePrefecture = $('#update-prefecture');
+        const $updateMunicipality = $('#update-municipality');
+
         function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -84,29 +81,27 @@
         });
 
         // Load prefectures vào select update-prefecture
-        function loadUpdatePrefectures(selectedId) {
+        function loadUpdatePrefectures(selectedId, callback) {
             $.get('/api/prefectures/', function(data){
-                const $pref = $('#update-prefecture');
-                $pref.empty().append('<option value="">Select prefecture</option>');
+                $updatePrefecture.empty().append('<option value="">Select prefecture</option>');
                 data.forEach(function(p){
-                    $pref.append('<option value="'+p.id+'">'+p.name+'</option>');
+                    $updatePrefecture.append('<option value="'+p.id+'">'+p.name+'</option>');
                 });
-                $pref.prop('disabled', false);
-                if (selectedId) $pref.val(selectedId);
+                $updatePrefecture.prop('disabled', false);
+                if (selectedId) $updatePrefecture.val(selectedId);
+                if (callback) callback();
             });
         }
 
-        // Load municipalities khi chọn prefecture
         function loadUpdateMunicipalities(prefectureId, selectedId) {
-            const $muni = $('#update-municipality');
-            $muni.empty().append('<option value="">Select municipality</option>').prop('disabled', true);
+            $updateMunicipality.empty().append('<option value="">Select municipality</option>').prop('disabled', true);
             if (prefectureId) {
                 $.get('/api/municipalities/', {prefecture_id: prefectureId}, function(data){
                     data.forEach(function(m){
-                        $muni.append('<option value="'+m.id+'">'+m.name+'</option>');
+                        $updateMunicipality.append('<option value="'+m.id+'">'+m.name+'</option>');
                     });
-                    $muni.prop('disabled', false);
-                    if (selectedId) $muni.val(selectedId);
+                    $updateMunicipality.prop('disabled', false);
+                    if (selectedId) $updateMunicipality.val(selectedId);
                 });
             }
         }
@@ -121,74 +116,100 @@
             $('#update-password2').val('');
             $('#update-submit-btn').prop('disabled', true);
 
-            // Gắn lại chú thích vào đầu modal-body
-            $('#update-hint').remove();
-            $('.modal-body', '#update-form').prepend(updateHintHtml);
-            $('#updateModal').modal('show');
+            let pref_id = '{{ user.userinfo.prefecture.id|default_if_none:"" }}';
+            let muni_id = '{{ user.userinfo.municipality.id|default_if_none:"" }}';
+
+        // SỬA: Load prefectures, rồi load municipalities nếu có prefecture đã chọn
+        loadUpdatePrefectures(pref_id, function() {
+            if (pref_id) {
+                loadUpdateMunicipalities(pref_id, muni_id);
+            } else {
+                $updateMunicipality.empty().append('<option value="">Select municipality</option>').prop('disabled', true);
+            }
         });
 
-        // Đăng ký lại sự kiện tắt chú thích
+        $('#update-hint').remove();
+        $('.modal-body', '#update-form').prepend(`
+            <div id="update-hint" class="alert alert-info py-2 d-flex justify-content-between align-items-center-dismissible fade show" role="alert" style="font-size:0.93em;">
+              <span>Submit is only allowed when all fields are filled in.</span>
+              <button type="button" id="hide-update-hint" class="btn btn-sm btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
+        $('#updateModal').modal('show');
+
+        // Khi chọn prefecture thì lọc lại municipality
+        $updatePrefecture.off('change').on('change', function() {
+            let pref_id = $(this).val();
+            loadUpdateMunicipalities(pref_id);
+        });
+    });
+
         $(document).on('click', '#hide-update-hint', function() {
             $('#update-hint').remove();
         });
 
-        // Kiểm tra đủ 3 trường mới enable submit cho update
+        // Enable submit khi đủ trường
         function checkUpdateFields() {
             let u = $('#update-username').val().trim();
             let p = $('#update-password').val();
             let p2 = $('#update-password2').val();
-            if(u && p && p2) {
+            let pref = $updatePrefecture.val();
+            let muni = $updateMunicipality.val();
+            if(u && p && p2 && pref && muni) {
                $('#update-submit-btn').prop('disabled', false);
             } else {
                 $('#update-submit-btn').prop('disabled', true);
             }
         }
-        $('#update-username, #update-password, #update-password2').on('input', checkUpdateFields);
+        $('#update-username, #update-password, #update-password2, #update-prefecture, #update-municipality').on('input change', checkUpdateFields);
 
         // Submit update AJAX
         $('#update-form').on('submit', function(e) {
-        e.preventDefault();
-        const username = $('#update-username').val().trim();
-        const password = $('#update-password').val();
-        const password2 = $('#update-password2').val();
+            e.preventDefault();
+            const username = $('#update-username').val().trim();
+            const password = $('#update-password').val();
+            const password2 = $('#update-password2').val();
+            const prefecture = $('#update-prefecture').val();
+            const municipality = $('#update-municipality').val();
 
-        let errorList = [];
-        if(!username || !password || !password2) {
-            errorList.push("Please fill in all fields.");
-        }
-        if(errorList.length) {
-            let html = '<ul class="mb-0">';
-            errorList.forEach(function(err) {
-                html += '<li>' + err + '</li>';
-            });
-            html += '</ul>';
-            $('#update-error-list').html(html).show();
-            return;
-        }
-
-        // Gửi lên server để nhận về list lỗi đầy đủ
-        $.ajax({
-            url: '{% url "ajax_update" %}',
-            method: 'POST',
-            data: {
-                username: username,
-                password: password,
-                password2: password2
-            },
-            success: function(data) {
-                if (data.success) {
-                    $('#updateModal').modal('hide');
-                } else if (data.errors) {
-                    let html = '<ul class="mb-0">';
-                    data.errors.forEach(function(err) {
-                        html += '<li>' + err + '</li>';
-                    });
-                    html += '</ul>';
-                    $('#update-error-list').html(html).show();
-                }
+            let errorList = [];
+            if(!username || !password || !password2 || !prefecture || !municipality) {
+                errorList.push("Please fill in all fields.");
             }
-        });
-    });
+            if(errorList.length) {
+                let html = '<ul class="mb-0">';
+                errorList.forEach(function(err) {
+                    html += '<li>' + err + '</li>';
+                });
+                html += '</ul>';
+                $('#update-error-list').html(html).show();
+                return;
+            }
 
+            $.ajax({
+                url: '{% url "ajax_update" %}',
+                method: 'POST',
+                data: {
+                    username: username,
+                    password: password,
+                    password2: password2,
+                    prefecture: prefecture,
+                    municipality: municipality
+                },
+                success: function(data) {
+                    if (data.success) {
+                        $('#updateModal').modal('hide');
+                        location.reload();
+                    } else if (data.errors) {
+                        let html = '<ul class="mb-0">';
+                        data.errors.forEach(function(err) {
+                            html += '<li>' + err + '</li>';
+                        });
+                        html += '</ul>';
+                        $('#update-error-list').html(html).show();
+                    }
+                }
+            });
+        });
 });
 </script>

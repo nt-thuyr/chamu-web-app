@@ -53,6 +53,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 function loadPrefectures() {
+
     $.get('/api/prefectures/', function(data){
         const $pref = $('#signup-prefecture');
         $pref.empty().append('<option value="">Select prefecture</option>');
@@ -92,14 +93,7 @@ $(function() {
         });
 
         // Luôn load toàn bộ prefecture khi mở modal, enable luôn
-        $.get('/api/prefectures/', function(data){
-            const $pref = $('#signup-prefecture');
-            $pref.empty().append('<option value="">Select prefecture</option>');
-            data.forEach(function(p){
-                $pref.append('<option value="'+p.id+'">'+p.name+'</option>');
-            });
-            $pref.prop('disabled', false);
-        });
+        loadPrefectures();
 
         // Khi chọn Prefecture thì load Municipality phù hợp
         $('#signup-prefecture').on('change', function() {

@@ -108,10 +108,12 @@ def ajax_update(request):
         new_username = request.POST.get("username", "").strip()
         new_password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
+        prefecture_id = request.POST.get("prefecture")
+        municipality_id = request.POST.get("municipality")
         errors = []
 
         # 1. Kiểm tra đủ trường
-        if not new_username or not new_password or not password2:
+        if not new_username or not new_password or not password2 or not prefecture_id or not municipality_id:
             errors.append("Please fill in all fields.")
 
         # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
@@ -130,6 +132,11 @@ def ajax_update(request):
             errors.append("Passwords do not match.")
 
         # 5. Nếu có lỗi thì trả về luôn
+        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
+        municipality = Municipality.objects.filter(id=municipality_id).first()
+        if not prefecture or not municipality:
+            errors.append("Invalid prefecture or municipality.")
+
         if errors:
             return JsonResponse({"success": False, "errors": errors})
 
@@ -142,6 +149,15 @@ def ajax_update(request):
             user.set_password(new_password)
             changed = True
 
+        try:
+            userinfo = user.userinfo
+            userinfo.prefecture = prefecture
+            userinfo.municipality = municipality
+            userinfo.save()
+            changed = True
+        except Exception:
+            pass
+
         if changed:
             user.save()
             from django.contrib.auth import update_session_auth_hash
@@ -150,7 +166,6 @@ def ajax_update(request):
         else:
             return JsonResponse({"success": True, "changed": False})
     return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
-
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
