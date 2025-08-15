@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
             name='EvaluationSurvey',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('score', models.FloatField(default=0.0)),
+                ('score', models.FloatField(default=3.0)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('criteria', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.criteria')),
                 ('municipality', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.municipality')),
@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             name='MunicipalityBaseScore',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('base_score', models.FloatField(default=0.0)),
+                ('base_score', models.FloatField(default=3.0)),
                 ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.country')),
                 ('criteria', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.criteria')),
                 ('municipality', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.municipality')),
@@ -84,8 +84,8 @@ class Migration(migrations.Migration):
             name='MunicipalityMatchingScore',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('avg_score', models.FloatField(default=0.0)),
-                ('final_score', models.FloatField(default=0.0)),
+                ('avg_score', models.FloatField(default=3.0)),
+                ('final_score', models.FloatField(default=3.0)),
                 ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.country')),
                 ('criteria', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.criteria')),
                 ('municipality', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chamu.municipality')),

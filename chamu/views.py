@@ -207,9 +207,10 @@ def thank_you_view(request, user_info_id):
         scores = scores_map.get(evaluation.criteria_id)
 
         # Logic lấy điểm hiện tại
-        current_score = 0.0
         if scores:
-            current_score = scores['final'] or scores['base'] or 0.0
+            current_score = scores['final'] if scores['final'] and scores['final'] != 0 else scores['base']
+        else:
+            current_score = 3.0
 
         score_details.append({
             'criteria_name': evaluation.criteria.name,
@@ -326,7 +327,7 @@ def update_municipality_score(municipality, country):
                 criteria=criteria,
                 user__country=country
             ).aggregate(Avg('score'))
-            avg_score = avg_score_data['score__avg'] if avg_score_data['score__avg'] is not None else 0.0
+            avg_score = avg_score_data['score__avg'] if avg_score_data['score__avg'] is not None else 3.0
 
             # 3. Cập nhật avg_score
             score_obj.avg_score = avg_score

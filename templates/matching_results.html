@@ -91,20 +91,21 @@
                         </td>
                     </tr>
                 <tr class="collapse" id="details-{{ forloop.counter }}">
-                    <td colspan="4">
-                        <div class="p-3 bg-light">
-                            <p class="text-muted">
-                                {% trans "注：1.0は高得点、5.0は低得点" %}
-                            </p>
-                            <h6>{% trans "項目別の詳細スコア" %}</h6>
-                            <ul class="list-unstyled">
-                                {% for detail in result.criteria_details %}
-                                    <li>
-                                        <strong>{{ detail.criteria_name }} (マッチ度 {{ detail.priority }}):</strong>
-                                        {% trans "市区町村スコア" %}: {{ detail.municipality_score|floatformat:2 }}
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                    <td colspan="4" style="text-align: left">
+                        <div class="p-3 bg-light d-flex justify-content-center">
+                            <div class="text-left" style="max-width: 600px;"> <p class="text-muted">
+                                    {% trans "注：1.0は高得点、5.0は低得点" %}
+                                </p>
+                                <h6>{% trans "項目別の詳細スコア" %} ({{ user_info.country.name }})</h6>
+                                <ul class="list-unstyled">
+                                    {% for detail in result.criteria_details %}
+                                        <li>
+                                            <strong>{{ detail.criteria_name }}:</strong>
+                                            {% trans "市区町村スコア" %}: {{ detail.municipality_score|floatformat:2 }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
                     </td>
                 </tr>

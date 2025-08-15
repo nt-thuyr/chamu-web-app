@@ -52,9 +52,9 @@ class MunicipalityScore(models.Model):
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
-    base_score = models.FloatField(default=0.0)
-    avg_score = models.FloatField(default=0.0)
-    final_score = models.FloatField(default=0.0)
+    base_score = models.FloatField(default=3.0)
+    avg_score = models.FloatField(default=3.0)
+    final_score = models.FloatField(default=3.0)
 
     class Meta:
         unique_together = ('municipality', 'country', 'criteria')
@@ -66,5 +66,5 @@ class EvaluationSurvey(models.Model):
     user = models.ForeignKey(UserInfo, on_delete=models.CASCADE)
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
     criteria = models.ForeignKey(Criteria, on_delete=models.CASCADE)
-    score = models.FloatField(default=0.0)
+    score = models.FloatField(default=3.0)
     created_at = models.DateTimeField(auto_now_add=True)

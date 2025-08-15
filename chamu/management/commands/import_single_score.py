@@ -2,8 +2,8 @@ import os
 import csv
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from chamu.models import Municipality, Country, Criteria, MunicipalityBaseScore
-from .import_score import normalize_score
+from chamu.models import Municipality, Country, Criteria, MunicipalityScore
+from .import_scores import normalize_score
 
 
 class Command(BaseCommand):
@@ -11,9 +11,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('file_path', type=str, help='Đường dẫn đến file CSV chứa điểm số.')
+        parser.add_argument(
+            '--country',
+            type=str,
+            help='(Tùy chọn) Tên quốc gia để chỉ định điểm số. Nếu không có, điểm sẽ được áp dụng cho tất cả các quốc gia.',
+            default=None
+        )
 
     def handle(self, *args, **options):
         file_path = options['file_path']
+        country_name = options['country']
 
         if not os.path.exists(file_path):
             self.stderr.write(self.style.ERROR(f'Không tìm thấy file: {file_path}'))
@@ -23,18 +30,26 @@ class Command(BaseCommand):
         criteria_name = os.path.splitext(os.path.basename(file_path))[0]
         self.stdout.write(self.style.NOTICE(f'Đang xử lý file "{file_path}" cho Tiêu chí "{criteria_name}"'))
 
-        # Lấy các đối tượng từ database
+        # Lấy đối tượng Criteria từ database
         try:
             criteria_obj = Criteria.objects.get(name=criteria_name)
         except Criteria.DoesNotExist:
             self.stderr.write(self.style.ERROR(f'Không tìm thấy Tiêu chí "{criteria_name}" trong database.'))
             return
 
-        countries = list(Country.objects.all())
-        if not countries:
-            self.stderr.write(self.style.ERROR(
-                'Không tìm thấy quốc gia nào trong database. Vui lòng thêm quốc gia trước khi chạy lệnh này.'))
-            return
+        # Lấy các đối tượng Country
+        if country_name:
+            try:
+                countries = [Country.objects.get(name=country_name)]
+            except Country.DoesNotExist:
+                self.stderr.write(self.style.ERROR(f'Không tìm thấy quốc gia "{country_name}".'))
+                return
+        else:
+            countries = list(Country.objects.all())
+            if not countries:
+                self.stderr.write(self.style.ERROR(
+                    'Không tìm thấy quốc gia nào trong database. Vui lòng thêm quốc gia trước khi chạy lệnh này.'))
+                return
 
         # --- BƯỚC 1: ĐỌC DỮ LIỆU TỪ FILE VÀ TÍNH MIN/MAX ĐỂ CHUẨN HÓA ---
         all_data = []
@@ -88,10 +103,10 @@ class Command(BaseCommand):
         for item in all_data:
             normalized_score = normalize_score(item['raw_score'], min_value, max_value, is_reverse)
 
-            # Vòng lặp qua tất cả các quốc gia đã lấy từ database
+            # Vòng lặp qua danh sách quốc gia đã được lọc
             for country in countries:
                 all_score_objects.append(
-                    MunicipalityBaseScore(
+                    MunicipalityScore(
                         municipality=municipality_map[item['municipality_name']],
                         country=country,
                         criteria=criteria_obj,
@@ -101,7 +116,8 @@ class Command(BaseCommand):
 
         if all_score_objects:
             with transaction.atomic():
-                MunicipalityBaseScore.objects.bulk_create(all_score_objects, ignore_conflicts=True)
+                # Sử dụng bulk_create để tạo các bản ghi mới
+                MunicipalityScore.objects.bulk_create(all_score_objects, ignore_conflicts=True)
             self.stdout.write(self.style.SUCCESS(
                 f'Đã tạo mới {len(all_score_objects)} bản ghi điểm số cho tiêu chí "{criteria_name}".'))
 

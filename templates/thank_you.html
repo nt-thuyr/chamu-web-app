@@ -85,9 +85,9 @@
                             <table class="table table-striped table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>{% trans "Criteria" %}</th>
+                                        <th>{% trans "項目" %}</th>
                                         <th class="text-center">{% trans "あなたのスコア" %}</th>
-                                        <th class="text-center">{% trans "今のスコア" %}</th>
+                                        <th class="text-center">{% trans "現在のスコア" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -107,6 +107,7 @@
                         </div>
                         <div class="card-footer text-muted rounded-bottom">
                             <small>{% trans "注：1.0は高得点、5.0は低得点　あなたのスコアは現在のスコアに反映されます。" %}</small>
+                            <small>{% trans "(現在のスコア："%}{{ user_info.country.name }}{% trans "を基にしたスコア)" %}</small>
                         </div>
                     </div>
                 </div>

@@ -52,14 +52,13 @@
                 {% if criteria_details %}
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-success text-white">
-                        <i class="fas fa-star me-2"></i>{% trans "あなたが理想としている項目ランキング" %}
+                        <i class="fas fa-star me-2"></i>{% trans "各項目のスコア" %}
                     </div>
                     <ul class="list-group list-group-flush">
                         {% for detail in criteria_details %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ detail.criteria_name }}</strong>
-                                <small class="text-muted">({% trans "優先度" %}: {{ detail.priority }})</small>
                             </div>
                             <span class="badge bg-secondary rounded-pill">
                                 {% trans "Score" %}: {{ detail.municipality_score|floatformat:2 }}
