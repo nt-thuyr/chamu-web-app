@@ -16,29 +16,39 @@
   
     .bg-blur {
         position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
         background: url("{% static 'chamu/inaka.jpg' %}") no-repeat center center fixed;
         background-size: cover;
         filter: blur(2px);
         z-index: 0;
-        opacity: 0.7;
+        opacity: 0.6;
     }
     .content-on-blur {
         position: relative;
         z-index: 1;
+        padding-top: 50px; /* Thêm padding trên để tạo khoảng trống với navbar */
+        padding-bottom: 50px;
     }
-    .wrapper.img {
-        background-image: url('{% static 'chamu/img.jpg' %}');
-        background-size: cover;
-        background-position: center;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-        padding: 0;
+    .row.justify-content-center {
+        display: flex;
+        align-items: center; /* Căn giữa theo chiều dọc */
     }
     .contact-wrap {
         background: rgba(255,255,255,0.95);
         border-radius: 20px;
         box-shadow: 0 2px 16px 0 rgba(25, 118, 210, 0.08);
+        padding: 2rem 3rem; /* Tăng padding để form rộng rãi hơn */
+        height: 100%; /* Chiều cao bằng với cột bên cạnh */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .contact-wrap form {
+        display: flex;
+        flex-direction: column;
     }
     .btn-primary {
         padding: 12px 40px;
@@ -46,6 +56,43 @@
         font-weight: 600;
         font-size: 1.1rem;
         letter-spacing: 1px;
+    }
+    /* Điều chỉnh các form-group để có cùng chiều rộng */
+    .form-group {
+        flex-grow: 1; /* Cho phép các form-group giãn ra */
+        max-width: 100%; /* Giới hạn tối đa trong trường hợp cần thiết */
+        margin-bottom: 1rem;
+    }
+    /* Căn chỉnh map và box chứa */
+    .col-md-6 .p-4 {
+        padding: 2rem
+    }
+    /* Sửa đổi khoảng cách của nút "Start Survey" */
+    .form-group.mt-4.mb-0.text-center {
+        margin-top: 0 !important; /* Giảm khoảng cách trên từ 4rem (mt-4) xuống 1.5rem */
+    }
+    #map {
+        height: 500px;
+        border-radius: 20px;
+        border: 2px solid #ddd;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .map-instruction {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #1565c0;
+        text-align: center;
+    }
+    #map-loading {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    .loading .contact-wrap, .loading #map {
+        pointer-events: none;
     }
 </style>
 

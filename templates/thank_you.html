@@ -13,11 +13,10 @@
     .bg-blur {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: url("{% static 'chamu/toulyou.jpg' %}") no-repeat center center fixed;
+        background: url("https://st3.depositphotos.com/2051931/18039/i/450/depositphotos_180398088-stock-photo-chureito-pagoda-mount-fuji-sunset.jpg") no-repeat center center fixed;
         background-size: cover;
         filter: blur(2px);
         z-index: 0;
-        opacity: 0.7;
     }
     .content-on-blur {
         position: relative;
@@ -128,11 +127,11 @@
             </div>
 
             <div class="text-center mt-5">
-                <div class="d-grid gap-2 d-md-block">
-                    <a href="{% url 'homepage' %}" class="btn btn-primary btn-lg">
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'homepage' %}" class="btn btn-primary btn-lg" style="margin-left:0">
                         <i class="fas fa-home me-2"></i>{% trans "ホームページへ" %}
                     </a>
-                    <a href="{% url 'match_info' %}" class="btn btn-outline-secondary btn-lg">
+                    <a href="{% url 'match_info' %}" class="btn btn-secondary btn-lg" style="margin-left:10px">
                         <i class="fas fa-search me-2"></i>{% trans "地域を探す" %}
                     </a>
                 </div>
