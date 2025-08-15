@@ -13,10 +13,11 @@
     .bg-blur {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background: url("{% static 'chamu/minatomirai.jpg' %}") no-repeat center center fixed;
         background-size: cover;
         filter: blur(2px);
         z-index: 0;
+        opacity: 0.7;
     }
     .content-on-blur {
         position: relative;
@@ -29,10 +30,10 @@
         <div class="row">
             <div class="col-md-10 offset-md-1">
                 <h1 class="text-center mb-4">{{ municipality.name }}</h1>
-               <p class="text-center text-muted" style="font-size: 2rem; font-weight: bold;">
+               <p class="text-center text-muted" style="font-size: 20px; font-weight: bold;margin-bottom: 20px;color: #000000 ">
                     in {{ prefecture.name }}
                 </p>
-
+ 
 
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-primary text-white">
@@ -51,14 +52,14 @@
                 {% if criteria_details %}
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header bg-success text-white">
-                        <i class="fas fa-star me-2"></i>{% trans "理想としている項目別スコア" %}
+                        <i class="fas fa-star me-2"></i>{% trans "あなたが理想としている項目ランキング" %}
                     </div>
                     <ul class="list-group list-group-flush">
                         {% for detail in criteria_details %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ detail.criteria_name }}</strong>
-                                <small class="text-muted">({% trans "Your Priority" %}: {{ detail.priority }})</small>
+                                <small class="text-muted">({% trans "優先度" %}: {{ detail.priority }})</small>
                             </div>
                             <span class="badge bg-secondary rounded-pill">
                                 {% trans "Score" %}: {{ detail.municipality_score|floatformat:2 }}
@@ -73,7 +74,7 @@
                             {% if country %}
                                 これらのスコアは {{ country.name }}を選択したユーザを基にしています。
                             {% endif %}
-                            </br>
+                            <br>
                         </small>
                     </div>
                 </div>
@@ -96,6 +97,9 @@
                         <i class="fas fa-arrow-left me-2"></i>{% trans "一つ前のページに戻る" %}
                     </a>
                     {% endif %}
+                    <a href="{% url 'evaluate_info' %}" class="btn btn-primary btn-sm mx-2">
+                        <i class="fas fa-hand-holding-heart me-2"></i>{% trans "地域評価する" %}
+                    </a>
                 </div>
             </div>
         </div>

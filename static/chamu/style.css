@@ -29,7 +29,7 @@ h2::after {
     display: block;
     width: 0;
     height: 4px;
-    background: linear-gradient(90deg, #B2B2B2, #A3A19F);
+    background: linear-gradient(90deg, #B2B2B2, #1f262e);
     margin: 20px auto 0;
     border-radius: 20px;
     animation: expandBar 0.8s ease-out forwards;

@@ -429,36 +429,70 @@ def calculate_matching_percentage(score):
 
 #-----------TEST VIEWS FOR INFO SURVEY-----------------
 def match_info_view(request):
+    user_info = None
+    # Lấy ID từ session thay vì đối tượng
+    user_info_id = request.session.get('user_info_id')
+
+    if user_info_id:
+        try:
+            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
+            user_info = UserInfo.objects.get(id=user_info_id)
+        except UserInfo.DoesNotExist:
+            del request.session['user_info_id']
+
     if request.method == 'POST':
-        form = MatchInfoForm(request.POST)
+        form = MatchInfoForm(request.POST, instance=user_info)
         if form.is_valid():
-            # Save user info and target prefecture
-            user_info = form.save()
+            new_user_info = form.save()
+            # Lưu ID của đối tượng vào session
+            request.session['user_info_id'] = new_user_info.id
+
             target_prefecture = form.cleaned_data['target_prefecture']
-            # Save user info to session
-            request.session['user_info_id'] = user_info.id
-            # Pass parameters to the matching survey
-            return redirect('matching_survey', user_info_id=user_info.id, target_prefecture_id=target_prefecture.id)
-        else:
-            return render(request, 'match_info.html', {'form': form})
+            return redirect('matching_survey', user_info_id=new_user_info.id,
+                            target_prefecture_id=target_prefecture.id)
     else:
-        form = MatchInfoForm()
+        # Tự động điền form với dữ liệu từ user_info đã có
+        initial_data = {}
+        if user_info:
+            initial_data['name'] = user_info.name
+            if user_info.country:
+                initial_data['country'] = user_info.country.id
+
+        form = MatchInfoForm(instance=user_info, initial=initial_data)
+
     return render(request, 'match_info.html', {'form': form})
 
 
 def evaluate_info_view(request):
-    if request.method == 'POST':
-        form = EvaluateInfoForm(request.POST)
-        if form.is_valid():
-            user_info = form.save()
-            # Redirect to the evaluation survey with user_info_id
-            return redirect('evaluation_survey', user_info_id=user_info.id)
-        else:
-            return render(request, 'evaluate_info.html', {'form': form})
-    else:
-        form = EvaluateInfoForm()
-    return render(request, 'evaluate_info.html', {'form': form})
+    user_info = None
+    # Lấy ID từ session thay vì đối tượng
+    user_info_id = request.session.get('user_info_id')
 
+    if user_info_id:
+        try:
+            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
+            user_info = UserInfo.objects.get(id=user_info_id)
+        except UserInfo.DoesNotExist:
+            del request.session['user_info_id']
+
+    if request.method == 'POST':
+        form = EvaluateInfoForm(request.POST, instance=user_info)
+        if form.is_valid():
+            new_user_info = form.save()
+            # Lưu ID của đối tượng vào session
+            request.session['user_info_id'] = new_user_info.id
+            return redirect('evaluation_survey', user_info_id=new_user_info.id)
+    else:
+        # Tự động điền form với dữ liệu từ user_info đã có
+        initial_data = {}
+        if user_info:
+            initial_data['name'] = user_info.name
+            if user_info.country:
+                initial_data['country'] = user_info.country.id
+
+        form = EvaluateInfoForm(instance=user_info, initial=initial_data)
+
+    return render(request, 'evaluate_info.html', {'form': form})
 
 def municipality_details_view(request, municipality_id, user_info_id=None):
     municipality = get_object_or_404(Municipality, id=municipality_id)

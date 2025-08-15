@@ -14,11 +14,11 @@
     .bg-blur {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background: url("{% static 'chamu/fuji.jpg' %}") ;
         background-size: cover;
         filter: blur(2px);
         z-index: 0;
-        opacity: 0.6;
+        opacity: 0.7;
     }
     .content-on-blur {
         position: relative;
@@ -115,6 +115,13 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <div class="text-center mt-5">
+            <a href="{% url 'evaluate_info' %}" class="btn btn-primary btn-sm mx-2">
+                <i class="fas fa-hand-holding-heart me-2"></i>{% trans "Contribute to us" %}
+            </a>
+        </div>
+
     </div>
 </div>
 {% endblock %}

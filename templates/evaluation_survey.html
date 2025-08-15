@@ -8,29 +8,9 @@
 <style>
     /* Bố cục chính của trang */
     body {
-        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background: url("{% static 'chamu/onsen.jpg' %}") no-repeat center center fixed;
         background-size: cover;
-    }
-
-    /* Tiêu đề chính */
-    .evaluation-h2 {
-        text-align: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-top: 50px;
-        margin-bottom: 30px;
-        color: #000;
-        position: relative;
-    }
-
-    .evaluation-h2::after {
-        content: "";
-        display: block;
-        width: 60px;
-        height: 3px;
-        background: #1976d2;
-        margin: 10px auto 0;
-        border-radius: 20px;
+        opacity: 0.7;
     }
 
     /* Khối form và bảng */
@@ -177,9 +157,14 @@
 
 <div class="container evaluation-container">
     <h2 class="fw-bold" style="color: #2c3e50;">
+<<<<<<< HEAD
                         
                         {% trans "自身の市区町村を評価しよう！" %}
                     </h2>
+=======
+        {% trans "自身の市区町村を評価しよう！" %}
+    </h2>
+>>>>>>> de868219fccda019ddb33de3a142ef3ec6f99ff0
     <form method="post">
         {% csrf_token %}
         {{ formset.management_form }}

@@ -12,10 +12,11 @@
     .bg-blur {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background: url("{% static 'chamu/tokai.jpg' %}") ;
         background-size: cover;
-        filter: blur(2px);
+        filter: blur(1px);
         z-index: 0;
+        opacity: 0.7;
     }
     .content-on-blur {
         position: relative;
@@ -37,7 +38,10 @@
                         {% trans "以下の項目であなたが重要視することをランキング形式で選択してください。" %}
                     </p>
                     <p class="text-muted">
-                        {% trans "安い価格・治安がいい・混雑度が低い・寒暖差がない・選択した国の飲食店が少ない"%}
+                        {% trans "注：括弧内の言葉は、その項目で理想とされる状態" %}
+                    </p>
+                    <p class="text-muted">
+                        {% trans "【価格・安全面・気温の変化・混雑度・選択した国の飲食店】"%}
                     </p>
                 </div>
                 <div id="alert-container"></div>

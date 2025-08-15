@@ -7,6 +7,7 @@
 {% block content %}
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,100,300,700" rel="stylesheet">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
     nav {
         position: relative;
@@ -16,11 +17,11 @@
     .bg-blur {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: url("{% static 'chamu/city.jpg' %}") no-repeat center center fixed;
+        background: url("{% static 'chamu/inaka.jpg' %}") no-repeat center center fixed;
         background-size: cover;
         filter: blur(2px);
         z-index: 0;
-        opacity: 0.6;
+        opacity: 0.7;
     }
     .content-on-blur {
         position: relative;
@@ -51,65 +52,65 @@
 <div class="bg-blur"></div>
 <div class="content-on-blur">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="wrapper img" >
-                <div class="row">
-                    <div class="col-md-9 col-lg-7">
-                        <div class="contact-wrap w-100 p-md-5 p-4">
-                           <h3 class="mb-4">{% trans "ユーザ情報" %}</h3>
-                            <div id="form-message-warning" class="mb-4"></div>
-                            <div id="form-message-success" class="mb-4" style="display:none;">
-                                {% trans "Your message was sent, thank you!" %}
-                            </div>
-                            <form method="post" id="evaluate-info-form" autocomplete="off">
-                                {% csrf_token %}
-                                {% if form.non_field_errors %}
-                                    <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+        <div class="col-lg-10"> <div class="row">
+                <div class="col-md-6">
+                    <div class="contact-wrap w-100 p-md-5 p-4">
+                        <h3 class="mb-4">{% trans "ユーザ情報" %}</h3>
+
+                        <form method="post" id="evaluate-info-form" autocomplete="off">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label class="label fw-semibold" for="{{ form.name.id_for_label }}">名前</label>
+                                {{ form.name|add_class:'form-control' }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
                                 {% endif %}
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group mb-3">
-                                            <label class="label fw-semibold" for="{{ form.name.id_for_label }}">名前</label>
-                                            {{ form.name|add_class:'form-control' }}
-                                            {% if form.name.errors %}
-                                                <div class="text-danger small mt-1">{{ form.name.errors }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group mb-3">
-                                            <label class="label fw-semibold" for="{{ form.country.id_for_label }}" style="margin-left: 10px;">国</label>
-                                            {{ form.country|add_class:'form-select' }}
-                                            {% if form.country.errors %}
-                                                <div class="text-danger small mt-1">{{ form.country.errors }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group mb-3">
-                                            <label class="label fw-semibold" for="{{ form.current_prefecture.id_for_label }}" style ="margin-left: 10px;">今住んでいる都道府県</label>
-                                            {{ form.current_prefecture|add_class:'form-select' }}
-                                            {% if form.current_prefecture.errors %}
-                                                <div class="text-danger small mt-1">{{ form.current_prefecture.errors }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group mb-3">
-                                            <label class="label fw-semibold" for="{{ form.municipality.id_for_label }}" style="margin-left: 10px;">市区町村</label>
-                                            {{ form.municipality|add_class:'form-select' }}
-                                            {% if form.municipality.errors %}
-                                                <div class="text-danger small mt-1">{{ form.municipality.errors }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group mt-4 mb-0 text-center">
-                                            <button type="submit" class="btn btn-primary">{% trans "開始" %}</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="label fw-semibold" for="{{ form.country.id_for_label }}">国</label>
+                                {{ form.country|add_class:'form-select' }}
+                                {% if form.country.errors %}
+                                    <div class="text-danger small mt-1">{{ form.country.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="label fw-semibold" for="{{ form.current_prefecture.id_for_label }}">今住んでいる都道府県</label>
+                                {{ form.current_prefecture|add_class:'form-select' }}
+                                {% if form.current_prefecture.errors %}
+                                    <div class="text-danger small mt-1">{{ form.current_prefecture.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="label fw-semibold" for="{{ form.municipality.id_for_label }}">市区町村</label>
+                                {{ form.municipality|add_class:'form-select' }}
+                                {% if form.municipality.errors %}
+                                    <div class="text-danger small mt-1">{{ form.municipality.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group mt-4 mb-0 text-center">
+                                <button type="submit" class="btn btn-primary">{% trans "開始" %}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-center">
+                    <div class="p-4 w-100">
+                        <div class="map-instruction">
+                            <i class="fa fa-info-circle"></i>
+                            {% trans "地図をクリック、もしくは左の選択肢一覧から都道府県を選択してください。" %}
+                        </div>
+                        <div id="map"></div>
+                        <div id="map-loading" class="text-center mt-2" style="display: none;">
+                            <i class="fa fa-spinner fa-spin"></i> {% trans "読み込み中．．．" %}
                         </div>
                     </div>
                 </div>
@@ -120,36 +121,88 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Hãy đảm bảo rằng các ID trong JavaScript khớp với ID của form
+        // DOM elements
         const nameInput = document.getElementById('id_name');
         const countrySelect = document.getElementById('id_country');
         const prefectureSelect = document.getElementById('id_current_prefecture');
         const municipalitySelect = document.getElementById('id_municipality');
-        const submitButton = document.querySelector('button[type="submit"]');
+        const submitButton = document.querySelector('button[type="submit"]'); // Cập nhật selector
+        const mapLoadingDiv = document.getElementById('map-loading');
 
-        submitButton.disabled = true;
+        let isUpdatingFromMap = false;
 
-        function checkFormValidity() {
-            if (nameInput.value && countrySelect.value && prefectureSelect.value && municipalitySelect.value) {
-                submitButton.disabled = false;
-            } else {
-                submitButton.disabled = true;
+        // Initialize map
+        const map = L.map('map').setView([35.6895, 139.6917], 5); // Tọa độ trung tâm Nhật Bản
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let currentMarker = null;
+
+        // --- Hàm đồng bộ hóa và xử lý sự kiện ---
+
+        function updateMap(lat, lng, zoom = 10) {
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            if (lat && lng) {
+                const latlng = [lat, lng];
+                map.setView(latlng, zoom);
+                currentMarker = L.marker(latlng).addTo(map);
             }
         }
 
-        nameInput.addEventListener('input', checkFormValidity);
-        countrySelect.addEventListener('change', checkFormValidity);
+        function showLoading(show) {
+            if (show) {
+                mapLoadingDiv.style.display = 'block';
+                document.body.classList.add('loading');
+            } else {
+                mapLoadingDiv.style.display = 'none';
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function checkFormValidity() {
+            // Kiểm tra các trường có giá trị hay không
+            const isValid = nameInput.value.trim() &&
+                           countrySelect.value &&
+                           prefectureSelect.value &&
+                           municipalitySelect.value;
+            // Kích hoạt/vô hiệu hóa nút submit
+            if (submitButton) {
+                submitButton.disabled = !isValid;
+            }
+        }
+
+        // Prefecture change handler (Lấy tọa độ để di chuyển map)
         prefectureSelect.addEventListener('change', function() {
             const prefectureId = this.value;
 
+            // Chỉ chạy logic map nếu không phải đang cập nhật từ map
+            if (!isUpdatingFromMap) {
+                if (prefectureId) {
+                    showLoading(true);
+                    fetch(`/api/prefecture_coords/?prefecture_id=${prefectureId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.latitude && data.longitude) {
+                                updateMap(data.latitude, data.longitude, 8);
+                            }
+                        })
+                        .finally(() => {
+                            showLoading(false);
+                        });
+                }
+            }
+            // Logic cũ để load municipalities vẫn giữ nguyên
+            const prefectureId_old = this.value;
             municipalitySelect.innerHTML = '';
             municipalitySelect.disabled = true;
-            checkFormValidity();
-
-            if (prefectureId) {
-                fetch(`/api/municipalities/?prefecture_id=${prefectureId}`)
+            if (prefectureId_old) {
+                fetch(`/api/municipalities/?prefecture_id=${prefectureId_old}`)
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(muni => {
@@ -162,9 +215,70 @@
                         checkFormValidity();
                     });
             }
+            checkFormValidity();
         });
 
-        municipalitySelect.addEventListener('change', checkFormValidity);
+        // Municipality change handler (Lấy tọa độ để di chuyển map)
+        municipalitySelect.addEventListener('change', function() {
+            const municipalityId = this.value;
+            if (!isUpdatingFromMap && municipalityId) {
+                showLoading(true);
+                fetch(`/api/municipality_coords/?municipality_id=${municipalityId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.latitude && data.longitude) {
+                            updateMap(data.latitude, data.longitude, 12);
+                        }
+                    })
+                    .finally(() => {
+                        showLoading(false);
+                    });
+            }
+            checkFormValidity();
+        });
+
+        // Map click handler (Cập nhật dropdown từ map)
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            showLoading(true);
+            isUpdatingFromMap = true;
+
+            updateMap(lat, lng, map.getZoom());
+
+            fetch(`/api/location_by_coords/?lat=${lat}&lng=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prefecture_id && data.municipality_id) {
+                        prefectureSelect.value = data.prefecture_id;
+                        prefectureSelect.dispatchEvent(new Event('change'));
+
+                        // Sử dụng setTimeout để đảm bảo municipalities đã được tải trước khi gán giá trị
+                        setTimeout(() => {
+                             municipalitySelect.value = data.municipality_id;
+                             checkFormValidity();
+                             isUpdatingFromMap = false;
+                        }, 500);
+                    } else {
+                        alert('No administrative division found for this location.');
+                        isUpdatingFromMap = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting location:', error);
+                    alert('Error getting location information. Please try a different area.');
+                    isUpdatingFromMap = false;
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+        });
+
+        // Validation and event listeners
+        nameInput.addEventListener('input', checkFormValidity);
+        countrySelect.addEventListener('change', checkFormValidity);
+
+        // Initial form check
+        checkFormValidity();
     });
 </script>
 {% endblock extra_js %}
