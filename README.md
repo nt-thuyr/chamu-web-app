@@ -1,4 +1,4 @@
-# 🏠 住みたい日本ナビ (Sumitai Nihon Navi) - Japan Housing Navigator
+# 🏠 住みたい日本ナビ (Sumitai Nihon Navi)
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Django](https://img.shields.io/badge/Django-4.0+-green.svg)](https://www.djangoproject.com/)
@@ -45,9 +45,14 @@ Our scoring system is built on a multi-layered approach for reliable and persona
 ---
 
 ## 📸 Demo / Screenshots
-### Matching Flow Views
+### Home Views
 <p float="left">
   <img src="docs/screenshots/homepage.png" width="300" />
+  <img src="docs/screenshots/about.png" width="300" />
+</p>
+
+### Matching Flow Views
+<p float="left">
   <img src="docs/screenshots/match_info.png" width="300" />
   <img src="docs/screenshots/matching_survey.png" width="300" />
 </p>
@@ -62,11 +67,6 @@ Our scoring system is built on a multi-layered approach for reliable and persona
   <img src="docs/screenshots/evaluate_info.png" width="300" />
   <img src="docs/screenshots/evaluation_survey.png" width="300" />
   <img src="docs/screenshots/thank_you.png" width="300" />
-</p>
-
-### Other
-<p float="left">
-  <img src="docs/screenshots/about.png" width="300" />
 </p>
 
 ---
@@ -93,9 +93,14 @@ cd sumitai-nihon-navi
 pipenv install
 ```
 
-3. **Run the development server**
+3. **Install required packages**
 ```bash
-pipenv run python manage.py runserver
+pip install -r requirements.txt
+```
+
+4. **Run the development server**
+```bash
+python manage.py runserver
 ```
 
 Then visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
@@ -105,7 +110,7 @@ Then visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 ## 📱 Usage
 
 ### Matching Flow 🏠➡️🏠
-1. Input personal information  
+1. Input your target prefecture 
 2. Rank evaluation criteria by importance  
 3. View matched municipalities with compatibility scores  
 4. Explore municipality details (Wikipedia, map, breakdowns)  
