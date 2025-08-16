@@ -110,62 +110,57 @@ footer {
     font-weight: 700;
 }
 
+/* The main container that holds the images */
 .bg_test {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    z-index: -1;
+    z-index: -1; /* Ensures the background is behind everything */
+    overflow: hidden;
+    /* REMOVED: background-size: cover; and background-position: center; */
+    /* These were causing conflicts with the child <img> elements. */
 }
 
-.bg_test-img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 2s;
-    z-index: 0;
-}
-
+/* The semi-transparent overlay */
 .bg_test-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255,255,255,0.5);
-    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.5);
+    z-index: 1; /* Puts the overlay on top of the images */
     pointer-events: none;
 }
 
-.bg_test-img.img1 { animation-delay: 0s; }
-.bg_test-img.img2 { animation-delay: 7s; }
-.bg_test-img.img3 { animation-delay: 14s; }
-.bg_test-img.img4 { animation-delay: 21s; }
+/* The actual background images */
+.bg_test-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover; /* This is the key to preventing the black bar */
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+    z-index: 0; /* Puts the images behind the overlay */
+}
 
+/* Animation Keyframes (these look fine) */
 @keyframes bgFade {
     0% { opacity: 1; }
     15% { opacity: 1; }
     35% { opacity: 0; }
     100% { opacity: 0; }
 }
+
 .bg_test-text {
     border: solid 1px;
     display: inline-block;
     padding: 10px 20px;
     background-color: rgba(255, 255, 255, 0.7);
-}
-
-.bg_test {
-    text-align: center;
-    padding: 150px;
-    border: solid 2px;
 }
 
 .btn-outline-primary {
