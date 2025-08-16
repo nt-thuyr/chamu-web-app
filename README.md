@@ -16,7 +16,7 @@ Not intended for commercial or production use.
 ## 🌟 Features
 - 🎯 Smart Location Matching (weighted scoring algorithm)  
 - 🗺️ Interactive Map Interface (Folium)  
-- 👥 Community Evaluation System (evaluates municipalities on 5 criteria: **Price, Population Density, Crime Rate, Cultural Food Availability, and Temperature**)
+- 👥 Community Evaluation System (evaluates municipalities on 5 criteria: **Price, Population Density, Crime Rate, Cultural Food Availability, and Temperature Variation**)
 - 🌏 Cultural Customization by nationality  
 - ⚡ Real-time Score Updates (objective + subjective feedback)  
 
