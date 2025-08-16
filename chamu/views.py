@@ -4,18 +4,15 @@ from django.db.models import Avg
 from django.forms import formset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 import wikipedia, folium, geopy, geopy.distance, re
 from django.views.decorators.http import require_GET
-from django.contrib.auth.hashers import check_password
+
 from .forms import (
     BaseUserInfoForm, MatchInfoForm, EvaluateInfoForm,
 )
 from .models import (
     Criteria, UserInfo, Municipality,
-    MunicipalityScore, EvaluationSurvey, Prefecture, Country
+    MunicipalityScore, EvaluationSurvey, Prefecture
 )
 
 # -----------------
@@ -37,141 +34,209 @@ def homepage(request):
     }
     return render(request, "homepage.html", context)
 
-def ajax_login(request):
-    if request.method == "POST":
-            username = request.POST.get("username")
-            password = request.POST.get("password")
-             # Xác thực người dùng
-            user = authenticate(request, username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"success": False, "error": "Tên đăng nhập hoặc mật khẩu không đúng."})
-    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
-
-def ajax_logout(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            logout(request)
-        return JsonResponse({"success": True})
-    else:
-        return JsonResponse({"success": False}, status=405)
-
-def ajax_signup(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        password2 = request.POST.get("password2")
-        country_id = request.POST.get("country")
-        prefecture_id = request.POST.get("prefecture")
-        municipality_id = request.POST.get("municipality")
-        errors = []
-        # Kiểm tra username trùng
-        if User.objects.filter(username=username).exists():
-            errors.append("Username already exists.")
-        # Kiểm tra mật khẩu nhập lại
-        if password != password2:
-            errors.append("Passwords do not match.")
-        if len(password) < 6:
-            errors.append("Your password must have at least 6 characters.")
-        # Có thể bổ sung kiểm tra khác tại đây (vd: ký tự đặc biệt...)
-        if not country_id or not prefecture_id or not municipality_id:
-            errors.append("You must select country, prefecture and municipality.")
-
-        if errors:
-            return JsonResponse({"success": False, "errors": errors})
-        user = User.objects.create_user(username=username, password=password)
-        user.save()
-
-        # Lưu UserInfo
-        country = Country.objects.filter(id=country_id).first()
-        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
-        municipality = Municipality.objects.filter(id=municipality_id).first()
-        UserInfo.objects.create(
-            user=user,
-            name=username,
-            country=country,
-            municipality=municipality
-        )
-        # Đăng nhập luôn
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False, "error": "Chỉ nhận POST."})
-
-
-@login_required
-def ajax_update(request):
-    if request.method == "POST":
-        user = request.user
-        new_username = request.POST.get("username", "").strip()
-        new_password = request.POST.get("password", "")
-        password2 = request.POST.get("password2", "")
-        prefecture_id = request.POST.get("prefecture")
-        municipality_id = request.POST.get("municipality")
-        errors = []
-
-        # 1. Kiểm tra đủ trường
-        if not new_username or not new_password or not password2 or not prefecture_id or not municipality_id:
-            errors.append("Please fill in all fields.")
-
-        # 2. Kiểm tra username đã tồn tại (nếu thay đổi)
-        if new_username != user.username:
-            if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
-                errors.append("Username already exists.")
-            if len(new_username) < 1:
-                errors.append("Username cannot be empty.")
-
-        # 3. Kiểm tra password
-        if len(new_password) < 6:
-            errors.append("Your password must have at least 6 characters.")
-
-        # 4. Kiểm tra nhập lại mật khẩu
-        if new_password != password2:
-            errors.append("Passwords do not match.")
-
-        # 5. Nếu có lỗi thì trả về luôn
-        prefecture = Prefecture.objects.filter(id=prefecture_id).first()
-        municipality = Municipality.objects.filter(id=municipality_id).first()
-        if not prefecture or not municipality:
-            errors.append("Invalid prefecture or municipality.")
-
-        if errors:
-            return JsonResponse({"success": False, "errors": errors})
-
-        # 6. Update nếu hợp lệ
-        changed = False
-        if new_username != user.username:
-            user.username = new_username
-            changed = True
-        if new_password and not check_password(new_password, user.password):
-            user.set_password(new_password)
-            changed = True
-
-        try:
-            userinfo = user.userinfo
-            userinfo.prefecture = prefecture
-            userinfo.municipality = municipality
-            userinfo.save()
-            changed = True
-        except Exception:
-            pass
-
-        if changed:
-            user.save()
-            from django.contrib.auth import update_session_auth_hash
-            update_session_auth_hash(request, user)
-            return JsonResponse({"success": True, "changed": True, "username": user.username})
-        else:
-            return JsonResponse({"success": True, "changed": False})
-    return JsonResponse({"success": False, "errors": ["Chỉ nhận POST."]})
-
 def about_view(request):
     """About page view"""
     return render(request, 'about.html')
+
+
+# ----------------- LUỒNG 1: MATCHING SURVEY -----------------
+def match_info_view(request):
+    user_info = None
+    # Lấy ID từ session thay vì đối tượng
+    user_info_id = request.session.get('user_info_id')
+
+    if user_info_id:
+        try:
+            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
+            user_info = UserInfo.objects.get(id=user_info_id)
+        except UserInfo.DoesNotExist:
+            del request.session['user_info_id']
+
+    if request.method == 'POST':
+        form = MatchInfoForm(request.POST, instance=user_info)
+        if form.is_valid():
+            new_user_info = form.save()
+            # Lưu ID của đối tượng vào session
+            request.session['user_info_id'] = new_user_info.id
+
+            target_prefecture = form.cleaned_data['target_prefecture']
+            return redirect('matching_survey', user_info_id=new_user_info.id,
+                            target_prefecture_id=target_prefecture.id)
+    else:
+        # Tự động điền form với dữ liệu từ user_info đã có
+        initial_data = {}
+        if user_info:
+            initial_data['name'] = user_info.name
+            if user_info.country:
+                initial_data['country'] = user_info.country.id
+
+        form = MatchInfoForm(instance=user_info, initial=initial_data)
+
+    return render(request, 'match_info.html', {'form': form})
+
+def matching_survey_view(request, user_info_id, target_prefecture_id):
+    user_info = get_object_or_404(UserInfo, id=user_info_id)
+    criteria_list = Criteria.objects.all().order_by('name')
+    ranks = range(1, len(criteria_list) + 1)
+
+    if request.method == 'POST':
+        selected_criteria = {}
+        for rank in ranks:
+            cid = request.POST.get(f'rank_{rank}')
+            if cid:
+                selected_criteria[rank] = int(cid)
+
+        # Lưu kết quả vào session
+        request.session[f'preferences_{user_info_id}'] = selected_criteria
+        print(f"User info ID stored in session: {request.session.get('user_info_id')}")
+        return redirect('matching_results', user_info_id=user_info.id, target_prefecture_id=target_prefecture_id)
+
+    return render(request, 'matching_survey.html', {
+        'criteria_list': criteria_list,
+        'ranks': ranks,
+    })
+
+
+def matching_results_view(request, user_info_id, target_prefecture_id):
+    user_info = get_object_or_404(UserInfo, id=user_info_id)
+
+    preferences_key = f'preferences_{user_info_id}'
+    user_preferences = request.session.get(preferences_key)
+
+    if not user_preferences:
+        return redirect('matching_survey', user_info_id=user_info.id, target_prefecture_id=target_prefecture_id)
+
+    # Get all-criteria IDs from user preferences
+    criteria_ids = user_preferences.values()
+    criteria_map = {
+        c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)
+    }
+
+    matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country, target_prefecture_id)
+    matching_results = sorted(matching_results, key=lambda x: x['score'])
+
+    # Sort user preferences by rank (key) (make sure keys are integers)
+    sorted_user_preferences_items = sorted(user_preferences.items(), key=lambda item: int(item[0]))
+
+    # Create template for matching_results.html
+    user_preferences_for_template = []
+    for rank, cid in sorted_user_preferences_items:
+        user_preferences_for_template.append({
+            'priority': int(rank),
+            'criteria_id': int(cid),
+            # Get criteria name from the map
+            'criteria_name': criteria_map.get(int(cid), 'N/A')
+        })
+
+    target_prefecture = get_object_or_404(Prefecture, id=target_prefecture_id)
+
+    return render(request, 'matching_results.html', {
+        'user_info': user_info,
+        'matching_results': matching_results,
+        'user_preferences': user_preferences_for_template,
+        'target_prefecture': target_prefecture,
+    })
+
+def municipality_details_view(request, municipality_id, user_info_id=None):
+    municipality = get_object_or_404(Municipality, id=municipality_id)
+    prefecture = municipality.prefecture
+
+    # Handle the back button logic from the previous conversation
+    # If user_info_id is passed, use it. Otherwise, try to get from session.
+    if not user_info_id:
+        user_info_id = request.session.get('user_info_id')
+        if not user_info_id:
+            return redirect('match_info')
+
+    try:
+        user_info = UserInfo.objects.get(id=user_info_id)
+        country = user_info.country
+    except UserInfo.DoesNotExist:
+        return redirect('match_info')
+
+    # Fetch user preferences from the session to calculate scores
+    preferences_key = f'preferences_{user_info_id}'
+    user_preferences = request.session.get(preferences_key, {})
+
+    criteria_details = []
+    if user_preferences:
+        # Fetch scores for this municipality and the user's criteria
+        criteria_ids = [int(cid) for cid in user_preferences.values()]
+
+        scores = MunicipalityScore.objects.filter(
+            municipality=municipality,
+            criteria__id__in=criteria_ids,
+            country=country
+        ).select_related('criteria')
+
+        # Iterate through preferences to build the details list
+        scores_map = {s.criteria_id: s for s in scores}
+        criteria_map = {c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)}
+
+        for rank_str, criteria_id in user_preferences.items():
+            rank = int(rank_str)
+            score_obj = scores_map.get(criteria_id)
+            if score_obj:
+                display_score = score_obj.final_score if score_obj.final_score and score_obj.final_score != 0 else score_obj.base_score
+                criteria_details.append({
+                    'criteria_name': criteria_map.get(criteria_id, 'N/A'),
+                    'priority': rank,
+                    'municipality_score': display_score,
+                })
+
+    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name, prefecture.name)
+
+    # Create map by folium when there is coordinates
+    municipality_map = None
+    if municipality.latitude and municipality.longitude:
+        map_center = [float(municipality.latitude), float(municipality.longitude)]
+        m = folium.Map(location=map_center, zoom_start=12)
+        folium.Marker(map_center, tooltip=municipality.name).add_to(m)
+        municipality_map = m._repr_html_()
+
+    return render(request, 'municipality_details.html', {
+        'municipality': municipality,
+        'prefecture': prefecture,
+        'user_info_id': user_info_id,
+        'criteria_details': criteria_details,
+        'municipality_description': description,  # Placeholder description
+        'image_url': image_url,  # Placeholder image URL
+        'wiki_url': wiki_url,  # Placeholder Wikipedia URL
+        'municipality_map': municipality_map,  # Folium map HTML
+    })
+
+
+# ----------------- LUỒNG 2: EVALUATION SURVEY -----------------
+def evaluate_info_view(request):
+    user_info = None
+    # Lấy ID từ session thay vì đối tượng
+    user_info_id = request.session.get('user_info_id')
+
+    if user_info_id:
+        try:
+            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
+            user_info = UserInfo.objects.get(id=user_info_id)
+        except UserInfo.DoesNotExist:
+            del request.session['user_info_id']
+
+    if request.method == 'POST':
+        form = EvaluateInfoForm(request.POST, instance=user_info)
+        if form.is_valid():
+            new_user_info = form.save()
+            # Lưu ID của đối tượng vào session
+            request.session['user_info_id'] = new_user_info.id
+            return redirect('evaluation_survey', user_info_id=new_user_info.id)
+    else:
+        # Tự động điền form với dữ liệu từ user_info đã có
+        initial_data = {}
+        if user_info:
+            initial_data['name'] = user_info.name
+            if user_info.country:
+                initial_data['country'] = user_info.country.id
+
+        form = EvaluateInfoForm(instance=user_info, initial=initial_data)
+
+    return render(request, 'evaluate_info.html', {'form': form})
 
 def evaluation_survey_view(request, user_info_id):
     user_info = get_object_or_404(UserInfo, id=user_info_id)
@@ -302,72 +367,10 @@ def thank_you_view(request, user_info_id):
         'municipality_map': municipality_map,
     })
 
-def matching_survey_view(request, user_info_id, target_prefecture_id):
-    user_info = get_object_or_404(UserInfo, id=user_info_id)
-    criteria_list = Criteria.objects.all().order_by('name')
-    ranks = range(1, len(criteria_list) + 1)
-
-    if request.method == 'POST':
-        selected_criteria = {}
-        for rank in ranks:
-            cid = request.POST.get(f'rank_{rank}')
-            if cid:
-                selected_criteria[rank] = int(cid)
-
-        # Lưu kết quả vào session
-        request.session[f'preferences_{user_info_id}'] = selected_criteria
-        print(f"User info ID stored in session: {request.session.get('user_info_id')}")
-        return redirect('matching_results', user_info_id=user_info.id, target_prefecture_id=target_prefecture_id)
-
-    return render(request, 'matching_survey.html', {
-        'criteria_list': criteria_list,
-        'ranks': ranks,
-    })
-
-
-def matching_results_view(request, user_info_id, target_prefecture_id):
-    user_info = get_object_or_404(UserInfo, id=user_info_id)
-
-    preferences_key = f'preferences_{user_info_id}'
-    user_preferences = request.session.get(preferences_key)
-
-    if not user_preferences:
-        return redirect('matching_survey', user_info_id=user_info.id, target_prefecture_id=target_prefecture_id)
-
-    # Get all-criteria IDs from user preferences
-    criteria_ids = user_preferences.values()
-    criteria_map = {
-        c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)
-    }
-
-    matching_results = calculate_municipality_matching_scores(user_preferences, user_info.country, target_prefecture_id)
-    matching_results = sorted(matching_results, key=lambda x: x['score'])
-
-    # Sort user preferences by rank (key) (make sure keys are integers)
-    sorted_user_preferences_items = sorted(user_preferences.items(), key=lambda item: int(item[0]))
-
-    # Create template for matching_results.html
-    user_preferences_for_template = []
-    for rank, cid in sorted_user_preferences_items:
-        user_preferences_for_template.append({
-            'priority': int(rank),
-            'criteria_id': int(cid),
-            # Get criteria name from the map
-            'criteria_name': criteria_map.get(int(cid), 'N/A')
-        })
-
-    target_prefecture = get_object_or_404(Prefecture, id=target_prefecture_id)
-
-    return render(request, 'matching_results.html', {
-        'user_info': user_info,
-        'matching_results': matching_results,
-        'user_preferences': user_preferences_for_template,
-        'target_prefecture': target_prefecture,
-    })
-
 # -----------------
 # Functions
 # -----------------
+# ----------------- CALCULATING AND UPDATING SCORES -----------------
 def update_municipality_score(municipality, country):
     """
     Update avg_score and final_score for a municipality.
@@ -489,142 +492,7 @@ def calculate_matching_percentage(score):
     percentage = (max_score - score) / (max_score - min_score) * 100
     return round(percentage, 2)
 
-
-#-----------TEST VIEWS FOR INFO SURVEY-----------------
-def match_info_view(request):
-    user_info = None
-    # Lấy ID từ session thay vì đối tượng
-    user_info_id = request.session.get('user_info_id')
-
-    if user_info_id:
-        try:
-            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
-            user_info = UserInfo.objects.get(id=user_info_id)
-        except UserInfo.DoesNotExist:
-            del request.session['user_info_id']
-
-    if request.method == 'POST':
-        form = MatchInfoForm(request.POST, instance=user_info)
-        if form.is_valid():
-            new_user_info = form.save()
-            # Lưu ID của đối tượng vào session
-            request.session['user_info_id'] = new_user_info.id
-
-            target_prefecture = form.cleaned_data['target_prefecture']
-            return redirect('matching_survey', user_info_id=new_user_info.id,
-                            target_prefecture_id=target_prefecture.id)
-    else:
-        # Tự động điền form với dữ liệu từ user_info đã có
-        initial_data = {}
-        if user_info:
-            initial_data['name'] = user_info.name
-            if user_info.country:
-                initial_data['country'] = user_info.country.id
-
-        form = MatchInfoForm(instance=user_info, initial=initial_data)
-
-    return render(request, 'match_info.html', {'form': form})
-
-
-def evaluate_info_view(request):
-    user_info = None
-    # Lấy ID từ session thay vì đối tượng
-    user_info_id = request.session.get('user_info_id')
-
-    if user_info_id:
-        try:
-            # Truy vấn cơ sở dữ liệu để lấy đối tượng UserInfo
-            user_info = UserInfo.objects.get(id=user_info_id)
-        except UserInfo.DoesNotExist:
-            del request.session['user_info_id']
-
-    if request.method == 'POST':
-        form = EvaluateInfoForm(request.POST, instance=user_info)
-        if form.is_valid():
-            new_user_info = form.save()
-            # Lưu ID của đối tượng vào session
-            request.session['user_info_id'] = new_user_info.id
-            return redirect('evaluation_survey', user_info_id=new_user_info.id)
-    else:
-        # Tự động điền form với dữ liệu từ user_info đã có
-        initial_data = {}
-        if user_info:
-            initial_data['name'] = user_info.name
-            if user_info.country:
-                initial_data['country'] = user_info.country.id
-
-        form = EvaluateInfoForm(instance=user_info, initial=initial_data)
-
-    return render(request, 'evaluate_info.html', {'form': form})
-
-def municipality_details_view(request, municipality_id, user_info_id=None):
-    municipality = get_object_or_404(Municipality, id=municipality_id)
-    prefecture = municipality.prefecture
-
-    # Handle the back button logic from the previous conversation
-    # If user_info_id is passed, use it. Otherwise, try to get from session.
-    if not user_info_id:
-        user_info_id = request.session.get('user_info_id')
-        if not user_info_id:
-            return redirect('match_info')
-
-    try:
-        user_info = UserInfo.objects.get(id=user_info_id)
-        country = user_info.country
-    except UserInfo.DoesNotExist:
-        return redirect('match_info')
-
-    # Fetch user preferences from the session to calculate scores
-    preferences_key = f'preferences_{user_info_id}'
-    user_preferences = request.session.get(preferences_key, {})
-
-    criteria_details = []
-    if user_preferences:
-        # Fetch scores for this municipality and the user's criteria
-        criteria_ids = [int(cid) for cid in user_preferences.values()]
-
-        scores = MunicipalityScore.objects.filter(
-            municipality=municipality,
-            criteria__id__in=criteria_ids,
-            country=country
-        ).select_related('criteria')
-
-        # Iterate through preferences to build the details list
-        scores_map = {s.criteria_id: s for s in scores}
-        criteria_map = {c.id: c.name for c in Criteria.objects.filter(id__in=criteria_ids)}
-
-        for rank_str, criteria_id in user_preferences.items():
-            rank = int(rank_str)
-            score_obj = scores_map.get(criteria_id)
-            if score_obj:
-                display_score = score_obj.final_score if score_obj.final_score and score_obj.final_score != 0 else score_obj.base_score
-                criteria_details.append({
-                    'criteria_name': criteria_map.get(criteria_id, 'N/A'),
-                    'priority': rank,
-                    'municipality_score': display_score,
-                })
-
-    description, image_url, wiki_url = get_municipality_info_from_wiki(municipality.name, prefecture.name)
-
-    # Create map by folium when there is coordinates
-    municipality_map = None
-    if municipality.latitude and municipality.longitude:
-        map_center = [float(municipality.latitude), float(municipality.longitude)]
-        m = folium.Map(location=map_center, zoom_start=12)
-        folium.Marker(map_center, tooltip=municipality.name).add_to(m)
-        municipality_map = m._repr_html_()
-
-    return render(request, 'municipality_details.html', {
-        'municipality': municipality,
-        'prefecture': prefecture,
-        'user_info_id': user_info_id,
-        'criteria_details': criteria_details,
-        'municipality_description': description,  # Placeholder description
-        'image_url': image_url,  # Placeholder image URL
-        'wiki_url': wiki_url,  # Placeholder Wikipedia URL
-        'municipality_map': municipality_map,  # Folium map HTML
-    })
-
+# ----------------- GET FUNCTIONS -----------------
 def get_municipality_info_from_wiki(municipality_name, prefecture_name):
     """
     Get description, image and link from Wikipedia using a more specific query.
