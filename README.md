@@ -46,6 +46,7 @@ Not intended for commercial or production use.
 <p float="left">
   <img src="docs/screenshots/about.png" width="300" />
 </p>
+
 ---
 
 ## 🚀 Getting Started
