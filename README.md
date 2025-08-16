@@ -107,7 +107,7 @@ Then visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 ## 👥 Development Team <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Vietnam.svg" width="20"> <img src="https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg" width="20">
 **Team Chamu** 
-- **孫　美結** (Sun Miyuki)  
+- **孫　美結** (Son Miyu)  
 - **青木　恵** (Aoki Megumi)  
 - **Thái Mỹ Anh**  
 - **Nguyễn Thanh Thủy**  
