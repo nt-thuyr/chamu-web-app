@@ -156,7 +156,7 @@ Then visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 ---
 
 ## 📄 License
-This project is not licensed for commercial use. It is for **educational purposes only**.
+This project is not licensed for commercial use. It is for **educational purposes** only.
 
 ---
 
