@@ -27,18 +27,18 @@ Not intended for commercial or production use.
 Our scoring system is built on a multi-layered approach for reliable and personalized recommendations.
 
 ### 1. Final Score
-**Combines objective data with community feedback.**
+**Combines objective data with community feedback:** 
 
 `Final Score = (Base Score × 0.6) + (User Reviews Average × 0.4)`
 
 ### 2. Matching Score
-**Customizes results based on user priorities.**
+**Customizes results based on user priorities:**
 
 `Matching Score = Σ(Individual Score × Priority Weight) / Total Weight`
 
 
 ### 3. Match Percentage
-**Converts the final score into a clear percentage.**
+**Converts the final score into a clear percentage:**
 
 `Match Percentage = ((Max Score - User Score) / Score Range) × 100%`
 
