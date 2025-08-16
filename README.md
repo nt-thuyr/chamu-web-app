@@ -16,9 +16,31 @@ Not intended for commercial or production use.
 ## 🌟 Features
 - 🎯 Smart Location Matching (weighted scoring algorithm)  
 - 🗺️ Interactive Map Interface (Folium)  
-- 👥 Community Evaluation System  
+- 👥 Community Evaluation System (evaluates municipalities on 5 criteria: **Price, Population Density, Crime Rate, Cultural Food Availability, and Temperature**)
 - 🌏 Cultural Customization by nationality  
 - ⚡ Real-time Score Updates (objective + subjective feedback)  
+
+---
+
+## ⚙️ Scoring Algorithm
+
+Our scoring system is built on a multi-layered approach for reliable and personalized recommendations.
+
+### 1. Final Score
+**Combines objective data with community feedback.**
+
+`Final Score = (Base Score × 0.6) + (User Reviews Average × 0.4)`
+
+### 2. Matching Score
+**Customizes results based on user priorities.**
+
+`Matching Score = Σ(Individual Score × Priority Weight) / Total Weight`
+
+
+### 3. Match Percentage
+**Converts the final score into a clear percentage.**
+
+`Match Percentage = ((Max Score - User Score) / Score Range) × 100%`
 
 ---
 
@@ -129,7 +151,7 @@ Then visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 ---
 
 ## 📄 License
-**No license** - This is an educational project
+This project is not licensed for commercial use. It is for **educational purposes only**.
 
 ---
 
