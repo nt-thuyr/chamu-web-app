@@ -162,7 +162,7 @@ This project is not licensed for commercial use. It is for **educational purpose
 
 ## 📬 Contact
 For questions or feedback, please contact us via GitHub Issues:  
-👉 [GitHub Repository](https://github.com//sumitai-nihon-navi)
+👉 [GitHub Repository](https://github.com/nt-thuyr/sumitai-nihon-navi)
 
 ---
 
